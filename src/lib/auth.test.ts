@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createRateLimiter, credentialsSchema, safeNextPath } from "./auth";
 
 describe("credentialsSchema", () => {
-  it("normaliza el email y acepta contraseñas de 12 a 72 caracteres", () => {
+  it("normaliza el email y acepta cualquier contraseña de hasta 72 caracteres", () => {
     expect(credentialsSchema.parse({ email: "  Ana@Example.COM ", password: "123456789012" })).toEqual({
       email: "ana@example.com",
       password: "123456789012",
@@ -10,8 +10,8 @@ describe("credentialsSchema", () => {
   });
   it("rechaza emails inválidos y contraseñas fuera de rango", () => {
     expect(credentialsSchema.safeParse({ email: "no-es-email", password: "123456789012" }).success).toBe(false);
-    expect(credentialsSchema.safeParse({ email: "a@b.es", password: "corta" }).success).toBe(false);
-    expect(credentialsSchema.safeParse({ email: "a@b.es", password: "x".repeat(11) }).success).toBe(false);
+    expect(credentialsSchema.safeParse({ email: "a@b.es", password: "" }).success).toBe(false);
+    expect(credentialsSchema.safeParse({ email: "a@b.es", password: "corta" }).success).toBe(true);
     expect(credentialsSchema.safeParse({ email: "a@b.es", password: "x".repeat(73) }).success).toBe(false);
     expect(credentialsSchema.safeParse({ email: "a@b.es" }).success).toBe(false);
   });

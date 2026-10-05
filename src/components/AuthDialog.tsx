@@ -17,7 +17,7 @@ const AUTH_ERRORS: Record<string, string> = {
   invalid_credentials: "Email o contraseña incorrectos.",
   email_not_confirmed: "Esta cuenta no tiene el email confirmado. Recupera la contraseña para activarla.",
   user_already_exists: "Ya existe una cuenta con ese email. Inicia sesión o recupera la contraseña.",
-  weak_password: "La contraseña es demasiado débil. Usa una más larga o con más variedad de caracteres.",
+  weak_password: "Supabase no acepta una contraseña tan corta (por defecto exige 6 caracteres como mínimo).",
   signup_not_configured: "El registro no está disponible: falta configurar el servidor.",
   over_email_send_rate_limit: "Se han enviado demasiados emails. Espera unos minutos y vuelve a intentarlo.",
   over_request_rate_limit: "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",

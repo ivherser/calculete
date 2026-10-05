@@ -39,7 +39,7 @@ export function ResetPasswordForm() {
         updateError.code === "same_password"
           ? "La contraseña nueva debe ser distinta de la anterior."
           : updateError.code === "weak_password"
-            ? "La contraseña es demasiado débil."
+            ? "Supabase no acepta una contraseña tan corta (por defecto exige 6 caracteres como mínimo)."
             : "No se ha podido guardar la contraseña. Inténtalo de nuevo.",
       );
       setStatus("ready");
