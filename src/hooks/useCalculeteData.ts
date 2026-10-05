@@ -8,7 +8,6 @@ import {
   clearLocalEntries,
   loadLocalEntries,
   markMigrationAsked,
-  saveLocalEntries,
   wasMigrationAsked,
 } from "@/lib/storage";
 import type { Entry } from "@/lib/types";
@@ -23,8 +22,9 @@ function rowKey(row: EntryRow): string {
 }
 
 /**
- * Estado de la app. Sin sesión → localStorage. Con sesión → tabla `entries` de Supabase
+ * Estado de la app: requiere sesión. Los datos viven en la tabla `entries` de Supabase
  * (sincronización con debounce: upsert de filas cambiadas y borrado de las eliminadas).
+ * Los datos que quedaran en localStorage de versiones anteriores se ofrecen para importar.
  */
 export function useCalculeteData() {
   const supabase = getBrowserSupabase();
@@ -66,8 +66,8 @@ export function useCalculeteData() {
 
     if (!userId || !supabase) {
       synced.current = new Map();
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial desde localStorage
-      setEntries(loadLocalEntries());
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reinicio al cerrar sesión
+      setEntries([]);
       setPendingMigration(null);
       setLoadedFor(null);
       return;
@@ -109,12 +109,7 @@ export function useCalculeteData() {
 
   // Persistencia
   useEffect(() => {
-    if (loadedFor === undefined) return;
-    if (loadedFor === null) {
-      saveLocalEntries(entries);
-      return;
-    }
-    if (!supabase || loadedFor !== userId) return;
+    if (!loadedFor || !supabase || loadedFor !== userId) return;
 
     const uid = loadedFor;
     const timer = setTimeout(async () => {
@@ -165,6 +160,7 @@ export function useCalculeteData() {
 
   return {
     supabaseEnabled: Boolean(supabase),
+    authReady,
     user,
     ready: loadedFor !== undefined || loadError !== null,
     entries,

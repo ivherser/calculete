@@ -3,15 +3,9 @@
 import { useState } from "react";
 import { emailSchema, PASSWORD_HINT, PASSWORD_MAX, passwordSchema } from "@/lib/auth";
 import { getBrowserSupabase } from "@/lib/supabase/client";
-import { Modal } from "./Modal";
 import { PasswordInput } from "./PasswordInput";
 
 type Mode = "signin" | "signup" | "recover";
-
-interface AuthDialogProps {
-  open: boolean;
-  onClose: () => void;
-}
 
 const AUTH_ERRORS: Record<string, string> = {
   invalid_credentials: "Email o contraseña incorrectos.",
@@ -25,8 +19,8 @@ const AUTH_ERRORS: Record<string, string> = {
 };
 
 const TITLES: Record<Mode, string> = {
-  signin: "Inicia sesión en calculete",
-  signup: "Crea tu cuenta de calculete",
+  signin: "Inicia sesión",
+  signup: "Crea tu cuenta",
   recover: "Recupera tu contraseña",
 };
 
@@ -47,7 +41,7 @@ async function createAccount(email: string, password: string): Promise<void> {
   throw { code: typeof body?.error === "string" ? body.error : "" };
 }
 
-export function AuthDialog({ open, onClose }: AuthDialogProps) {
+export function AuthForm() {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -95,7 +89,6 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
       const { error } = await supabase.auth.signInWithPassword({ email: parsedEmail.data, password });
       if (error) throw error;
       setPassword("");
-      onClose();
     } catch (error) {
       const fallback =
         mode === "signup" ? "No se ha podido crear la cuenta. Inténtalo de nuevo." : "No se ha podido completar la operación. Inténtalo de nuevo.";
@@ -105,10 +98,15 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
     }
   }
 
+  if (!supabase) {
+    return <p className="text-sm text-slate-600">El inicio de sesión no está configurado en este despliegue.</p>;
+  }
+
   const linkClass = "font-medium text-indigo-600 hover:text-indigo-800";
 
   return (
-    <Modal open={open} onClose={onClose} title={TITLES[mode]}>
+    <div>
+      <h1 className="mb-2 text-lg font-semibold text-slate-900">{TITLES[mode]}</h1>
       <p className="mb-4 text-sm text-slate-600">
         {mode === "recover"
           ? "Te enviaremos un enlace a tu email para que pongas una contraseña nueva."
@@ -180,6 +178,6 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
           )}
         </p>
       </form>
-    </Modal>
+    </div>
   );
 }
