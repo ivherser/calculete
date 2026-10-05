@@ -39,7 +39,7 @@ Calculadora personal de ingresos, gastos y balance anual.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | cliente + servidor | Clave pública *anon* del proyecto. Si no existe se usa `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (la que crea la integración de Vercel). |
 | `SUPABASE_SERVICE_ROLE_KEY` | **solo servidor** | Clave *service_role*. La usan `/admin` y el alta de cuentas (`/api/auth/signup`). Nunca la publiques ni le pongas prefijo `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_APP_VERSION` | cliente | Opcional. Versión mostrada en la cabecera. Si no se define se usa la constante de `src/lib/version.ts` (`v1.<nº PR>`). |
-| `ADMIN_EMAILS` | solo servidor | Opcional. Emails admin separados por comas (deben tener el email confirmado). |
+| `ADMIN_EMAILS` | solo servidor | Opcional. Emails admin separados por comas. Estos emails **no** se pueden registrar desde la app: crea esa cuenta en Supabase → Authentication → Users → *Add user* (marcando *Auto Confirm User*). |
 | `ADMIN_USER_IDS` | solo servidor | Opcional. IDs (uuid) de usuarios admin separados por comas. |
 
 Si no se definen las variables de Supabase la app funciona solo en modo local (el botón de login queda deshabilitado).
