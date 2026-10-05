@@ -32,7 +32,7 @@ Calculadora personal de ingresos, gastos y balance anual.
 | Variable | Dónde | Descripción |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | cliente + servidor | URL del proyecto Supabase (`https://<ref>.supabase.co`). |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | cliente + servidor | Clave pública *anon* del proyecto. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | cliente + servidor | Clave pública *anon* del proyecto. Si no existe se usa `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (la que crea la integración de Vercel). |
 | `SUPABASE_SERVICE_ROLE_KEY` | **solo servidor** | Clave *service_role*. Solo la usa `/admin`. Nunca la publiques ni le pongas prefijo `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_APP_VERSION` | cliente | Opcional. Versión mostrada en la cabecera. Si no se define se usa la constante de `src/lib/version.ts` (`v1.<nº PR>`). |
 | `ADMIN_EMAILS` | solo servidor | Opcional. Emails admin separados por comas (deben tener el email confirmado). |
