@@ -13,15 +13,19 @@ Calculadora personal de ingresos, gastos y balance anual.
 ## Funcionalidades
 
 - **Ingresos** y **Gastos**: filas con concepto, cantidad y periodicidad (mensual, bimensual, trimestral, semestral,
-  anual, puntual) y botón «+» para añadir filas.
+  anual, puntual). El botón «+» bajo el último concepto, o pulsar Intro en un concepto, añade una fila nueva.
+  Las filas se recolocan arrastrando el asa ⠿ (o con las flechas ↑/↓ con el asa enfocada).
 - **Matriz de meses (ENE–DIC)** por concepto: al pulsar un mes se autocompleta según la periodicidad desde ese mes
   (cíclico sobre el año, p. ej. trimestral desde NOV → NOV, FEB, MAY, AGO). Pulsar otro mes recalcula el patrón;
   pulsar un mes marcado lo desmarca. La cantidad se aplica en cada mes marcado.
 - **Balance**:
   - Evolución mensual de ingresos − gastos (barras) y acumulado (línea).
   - Donut con los principales gastos anuales por concepto.
+  - Balance parcial: tabla mes a mes con ingresos, gastos, lo que queda y el acumulado, más media mensual y total
+    anual.
   - Colchón de seguridad: gasto medio mensual × 9.
   - Distribución del beneficio anual en ahorro, inversión y gastos con un slider por concepto (siempre suman 100 %).
+    Al mover un slider solo se ajusta el concepto que hace más tiempo que no se toca.
 
 ## Variables de entorno
 

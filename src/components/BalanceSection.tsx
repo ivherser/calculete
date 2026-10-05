@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -16,13 +16,14 @@ import {
   YAxis,
 } from "recharts";
 import {
+  adjustLeastRecent,
   annualAmount,
   expensesByConcept,
   monthlyBalance,
   normalizePercentages,
-  rebalancePercentages,
   safetyCushion,
   SAFETY_CUSHION_MONTHS,
+  type MonthlyBalance,
 } from "@/lib/balance";
 import { formatEuro, formatPercent } from "@/lib/format";
 import { MONTH_LABELS, type Entry } from "@/lib/types";
@@ -53,6 +54,7 @@ function Card({ title, children, className = "" }: { title: string; children: Re
 }
 
 export function BalanceSection({ entries, distribution, onDistributionChange }: BalanceSectionProps) {
+  const [touchOrder, setTouchOrder] = useState<number[]>(() => DISTRIBUTION.map((_, i) => i));
   const monthly = useMemo(
     () =>
       monthlyBalance(entries).map((m) => ({
@@ -136,6 +138,8 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
         </Card>
       </div>
 
+      <PartialBalanceTable monthly={monthly} annualIncome={annualIncome} annualExpense={annualExpense} />
+
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="Colchón de seguridad">
           <p className="text-4xl font-extrabold tabular-nums text-indigo-700">{formatEuro(cushion)}</p>
@@ -170,7 +174,11 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
                     max={100}
                     step={1}
                     value={Math.round(percentages[i])}
-                    onChange={(e) => onDistributionChange(rebalancePercentages(percentages, i, Number(e.target.value)))}
+                    onChange={(e) => {
+                      const next = adjustLeastRecent(percentages, i, Number(e.target.value), touchOrder);
+                      setTouchOrder(next.touchOrder);
+                      onDistributionChange(next.values);
+                    }}
                     className="w-full"
                     style={{ accentColor: d.color }}
                   />
@@ -193,5 +201,73 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
         </Card>
       </div>
     </section>
+  );
+}
+
+function PartialBalanceTable({
+  monthly,
+  annualIncome,
+  annualExpense,
+}: {
+  monthly: (MonthlyBalance & { label: string })[];
+  annualIncome: number;
+  annualExpense: number;
+}) {
+  const annualNet = annualIncome - annualExpense;
+  const rows: { label: string; values: number[]; total: number; className: string; signed?: boolean }[] = [
+    { label: "Ingresos", values: monthly.map((m) => m.income), total: annualIncome, className: "text-emerald-700" },
+    { label: "Gastos", values: monthly.map((m) => m.expense), total: annualExpense, className: "text-rose-700" },
+    { label: "Queda", values: monthly.map((m) => m.net), total: annualNet, className: "font-semibold", signed: true },
+    {
+      label: "Acumulado",
+      values: monthly.map((m) => m.cumulative),
+      total: annualNet,
+      className: "text-slate-600",
+      signed: true,
+    },
+  ];
+  const tone = (v: number) => (v < 0 ? "text-rose-600" : "text-indigo-700");
+
+  return (
+    <Card title="Balance parcial mensual / anual">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[960px] text-sm tabular-nums">
+          <thead>
+            <tr className="text-xs uppercase tracking-wide text-slate-500">
+              <th className="px-2 py-1 text-left font-medium" />
+              {monthly.map((m) => (
+                <th key={m.month} className="px-2 py-1 text-right font-medium">
+                  {m.label}
+                </th>
+              ))}
+              <th className="border-l border-slate-200 px-2 py-1 text-right font-medium">Media/mes</th>
+              <th className="px-2 py-1 text-right font-medium">Anual</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label} className="border-t border-slate-100">
+                <th scope="row" className={`px-2 py-1.5 text-left font-medium ${row.className}`}>
+                  {row.label}
+                </th>
+                {row.values.map((v, i) => (
+                  <td key={i} className={`px-2 py-1.5 text-right ${row.signed ? tone(v) : row.className}`}>
+                    {formatEuro(v)}
+                  </td>
+                ))}
+                <td
+                  className={`border-l border-slate-200 px-2 py-1.5 text-right ${row.signed ? tone(row.total) : row.className}`}
+                >
+                  {row.label === "Acumulado" ? "" : formatEuro(row.total / 12)}
+                </td>
+                <td className={`px-2 py-1.5 text-right font-semibold ${row.signed ? tone(row.total) : row.className}`}>
+                  {formatEuro(row.total)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }
