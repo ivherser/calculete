@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 /** Refresca la sesión de Supabase en cada navegación y reescribe las cookies. */
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   let response = NextResponse.next({ request });
   if (!url || !anonKey) return response;
 
