@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSupabase } from "@/lib/supabase/server";
 
-/** Destino del magic link / confirmación de email (flujo PKCE). */
+/** Destino del enlace de confirmación de email (flujo PKCE). */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");

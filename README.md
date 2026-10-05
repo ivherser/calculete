@@ -5,7 +5,7 @@ Calculadora personal de ingresos, gastos y balance anual.
 - **Stack**: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + Recharts, desplegable en Vercel.
 - **Backend**: Supabase (Auth + Postgres con RLS).
 - **Sin login**: los datos se guardan en `localStorage` del navegador.
-- **Con login** (icono arriba a la derecha; enlace mágico o email + contraseña): los datos se guardan en la tabla
+- **Con login** (icono arriba a la derecha; email + contraseña): los datos se guardan en la tabla
   `public.entries` asociados a tu usuario. En el primer login se ofrece importar los datos locales a la cuenta.
 - **`/admin`**: sin enlace en la navegación. Solo accesible para administradores; lista los usuarios que han iniciado
   sesión y permite ver sus datos. Las consultas se hacen en servidor con `SUPABASE_SERVICE_ROLE_KEY`.
