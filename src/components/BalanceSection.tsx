@@ -53,6 +53,10 @@ function Card({ title, children, className = "" }: { title: string; children: Re
   );
 }
 
+function MonthlyAverageNote({ value }: { value: number }) {
+  return <p className="mt-1 text-xs tabular-nums text-slate-500">{formatEuro(value)} de media al mes</p>;
+}
+
 export function BalanceSection({ entries, distribution, onDistributionChange }: BalanceSectionProps) {
   const [touchOrder, setTouchOrder] = useState<number[]>(() => DISTRIBUTION.map((_, i) => i));
   const monthly = useMemo(
@@ -89,14 +93,17 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card title="Ingresos anuales">
           <p className="text-2xl font-bold tabular-nums text-emerald-600">{formatEuro(annualIncome)}</p>
+          <MonthlyAverageNote value={annualIncome / 12} />
         </Card>
         <Card title="Gastos anuales">
           <p className="text-2xl font-bold tabular-nums text-rose-600">{formatEuro(annualExpense)}</p>
+          <MonthlyAverageNote value={annualExpense / 12} />
         </Card>
         <Card title="Beneficio anual">
           <p className={`text-2xl font-bold tabular-nums ${profit >= 0 ? "text-indigo-700" : "text-rose-600"}`}>
             {formatEuro(profit)}
           </p>
+          <MonthlyAverageNote value={profit / 12} />
         </Card>
       </div>
 
