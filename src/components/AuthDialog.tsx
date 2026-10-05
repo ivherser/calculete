@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { emailSchema, passwordSchema } from "@/lib/auth";
+import { emailSchema, PASSWORD_HINT, PASSWORD_MAX, passwordSchema } from "@/lib/auth";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { Modal } from "./Modal";
 import { PasswordInput } from "./PasswordInput";
@@ -68,8 +68,12 @@ export function AuthDialog({ open, onClose }: AuthDialogProps) {
       setMessage({ kind: "error", text: "Introduce un email válido." });
       return;
     }
-    if (mode !== "recover" && !passwordSchema.safeParse(password).success) {
-      setMessage({ kind: "error", text: "La contraseña debe tener entre 8 y 72 caracteres." });
+    if (mode === "signup" && !passwordSchema.safeParse(password).success) {
+      setMessage({ kind: "error", text: PASSWORD_HINT });
+      return;
+    }
+    if (mode === "signin" && (password.length === 0 || password.length > PASSWORD_MAX)) {
+      setMessage({ kind: "error", text: "Introduce tu contraseña." });
       return;
     }
 

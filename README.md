@@ -8,7 +8,7 @@ Calculadora personal de ingresos, gastos y balance anual.
 - **Con login** (icono arriba a la derecha; email + contraseña): los datos se guardan en la tabla
   `public.entries` asociados a tu usuario. En el primer login se ofrece importar los datos locales a la cuenta.
   - *Crear cuenta*: la crea el servidor (`POST /api/auth/signup`, con la service role key) **ya confirmada**, sin email de
-    confirmación, y entra directamente. No depende del ajuste *Confirm email* de Supabase.
+    confirmación, y entra directamente. Las contraseñas nuevas deben tener entre 12 y 72 caracteres. No depende del ajuste *Confirm email* de Supabase.
   - *¿Has olvidado tu contraseña?*: envía un enlace al email que lleva a `/restablecer` para poner una contraseña nueva
     (hay que abrirlo en el mismo navegador donde se pidió).
 - **`/admin`**: sin enlace en la navegación. Solo accesible para administradores; lista los usuarios que han iniciado

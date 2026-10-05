@@ -1,9 +1,12 @@
 import { z } from "zod";
 
-export const PASSWORD_MIN = 8;
+export const PASSWORD_MIN = 12;
 export const PASSWORD_MAX = 72;
 
 export const emailSchema = z.string().trim().toLowerCase().max(254).pipe(z.email());
+export const PASSWORD_HINT = `La contraseña debe tener entre ${PASSWORD_MIN} y ${PASSWORD_MAX} caracteres.`;
+
+/** Contraseñas nuevas (alta y restablecimiento). */
 export const passwordSchema = z.string().min(PASSWORD_MIN).max(PASSWORD_MAX);
 export const credentialsSchema = z.object({ email: emailSchema, password: passwordSchema });
 

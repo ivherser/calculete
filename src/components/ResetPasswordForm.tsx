@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { passwordSchema } from "@/lib/auth";
+import { PASSWORD_HINT, passwordSchema } from "@/lib/auth";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { PasswordInput } from "./PasswordInput";
 
@@ -24,7 +24,7 @@ export function ResetPasswordForm() {
     const supabase = getBrowserSupabase();
     if (!supabase) return;
     if (!passwordSchema.safeParse(password).success) {
-      setError("La contraseña debe tener entre 8 y 72 caracteres.");
+      setError(PASSWORD_HINT);
       return;
     }
     if (password !== confirm) {

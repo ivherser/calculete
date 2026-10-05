@@ -30,7 +30,7 @@ export function PasswordInput({ value, onChange, autoComplete, label = "Contrase
           type={visible ? "text" : "password"}
           required
           autoComplete={autoComplete}
-          minLength={PASSWORD_MIN}
+          minLength={autoComplete === "new-password" ? PASSWORD_MIN : undefined}
           maxLength={PASSWORD_MAX}
           value={value}
           onChange={(e) => onChange(e.target.value)}
