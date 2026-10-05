@@ -27,7 +27,8 @@ const AUTH_ERRORS: Record<string, string> = {
 function authErrorMessage(error: unknown, action: "signin" | "signup"): string {
   const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
   if (AUTH_ERRORS[code]) return AUTH_ERRORS[code];
-  if (error instanceof TypeError) return "No se ha podido conectar con el servidor. Revisa tu conexión.";
+  const name = error instanceof Error ? error.name : "";
+  if (error instanceof TypeError || name === "AuthRetryableFetchError") return "No se ha podido conectar con el servidor. Revisa tu conexión.";
   return action === "signin"
     ? "No se ha podido iniciar sesión. Inténtalo de nuevo."
     : "No se ha podido crear la cuenta. Inténtalo de nuevo.";
