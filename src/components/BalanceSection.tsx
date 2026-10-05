@@ -53,6 +53,10 @@ function Card({ title, children, className = "" }: { title: string; children: Re
   );
 }
 
+function MonthlyAverageNote({ value }: { value: number }) {
+  return <p className="mt-1 text-xs tabular-nums text-slate-500">{formatEuro(value)} de media al mes</p>;
+}
+
 export function BalanceSection({ entries, distribution, onDistributionChange }: BalanceSectionProps) {
   const [touchOrder, setTouchOrder] = useState<number[]>(() => DISTRIBUTION.map((_, i) => i));
   const monthly = useMemo(
@@ -60,8 +64,6 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
       monthlyBalance(entries).map((m) => ({
         ...m,
         label: MONTH_LABELS[m.month],
-        positive: Math.max(m.net, 0),
-        negative: Math.min(m.net, 0),
       })),
     [entries],
   );
@@ -91,19 +93,22 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card title="Ingresos anuales">
           <p className="text-2xl font-bold tabular-nums text-emerald-600">{formatEuro(annualIncome)}</p>
+          <MonthlyAverageNote value={annualIncome / 12} />
         </Card>
         <Card title="Gastos anuales">
           <p className="text-2xl font-bold tabular-nums text-rose-600">{formatEuro(annualExpense)}</p>
+          <MonthlyAverageNote value={annualExpense / 12} />
         </Card>
         <Card title="Beneficio anual">
           <p className={`text-2xl font-bold tabular-nums ${profit >= 0 ? "text-indigo-700" : "text-rose-600"}`}>
             {formatEuro(profit)}
           </p>
+          <MonthlyAverageNote value={profit / 12} />
         </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Evolución mensual (ingresos − gastos)" className="lg:col-span-2">
+        <Card title="Evolución mensual" className="lg:col-span-2">
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={monthly} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
@@ -113,9 +118,9 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
                 <Tooltip formatter={tooltipEuro} />
                 <Legend />
                 <ReferenceLine y={0} stroke="#94a3b8" />
-                <Bar dataKey="positive" name="Balance positivo" stackId="net" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="negative" name="Balance negativo" stackId="net" fill="#f43f5e" radius={[0, 0, 4, 4]} />
-                <Line type="monotone" dataKey="cumulative" name="Acumulado" stroke="#4f46e5" strokeWidth={2} dot={false} />
+                <Bar dataKey="income" name="Ingresos" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expense" name="Gastos" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                <Line type="monotone" dataKey="net" name="Balance" stroke="#4f46e5" strokeWidth={2} dot={{ r: 3 }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
