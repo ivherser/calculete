@@ -60,8 +60,6 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
       monthlyBalance(entries).map((m) => ({
         ...m,
         label: MONTH_LABELS[m.month],
-        positive: Math.max(m.net, 0),
-        negative: Math.min(m.net, 0),
       })),
     [entries],
   );
@@ -103,7 +101,7 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Evolución mensual (ingresos − gastos)" className="lg:col-span-2">
+        <Card title="Evolución mensual" className="lg:col-span-2">
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={monthly} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
@@ -113,9 +111,9 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
                 <Tooltip formatter={tooltipEuro} />
                 <Legend />
                 <ReferenceLine y={0} stroke="#94a3b8" />
-                <Bar dataKey="positive" name="Balance positivo" stackId="net" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="negative" name="Balance negativo" stackId="net" fill="#f43f5e" radius={[0, 0, 4, 4]} />
-                <Line type="monotone" dataKey="cumulative" name="Acumulado" stroke="#4f46e5" strokeWidth={2} dot={false} />
+                <Bar dataKey="income" name="Ingresos" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expense" name="Gastos" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                <Line type="monotone" dataKey="net" name="Balance" stroke="#4f46e5" strokeWidth={2} dot={{ r: 3 }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
