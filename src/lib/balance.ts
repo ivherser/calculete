@@ -71,18 +71,34 @@ export function normalizePercentages(weights: number[]): number[] {
 }
 
 /**
- * Fija el porcentaje `index` a `value` y reparte el resto entre los demás
- * proporcionalmente a sus valores actuales, de modo que siempre sumen 100.
+ * Fija el porcentaje `index` a `value` y compensa la diferencia para sumar 100 modificando
+ * solo el concepto tocado hace más tiempo (según `touchOrder`, de menos a más reciente).
+ * Si ese concepto llega a 0 o 100, el resto pasa al siguiente menos reciente.
  */
-export function rebalancePercentages(current: number[], index: number, value: number): number[] {
-  const target = Math.min(100, Math.max(0, value));
-  const remaining = 100 - target;
-  const others = current.map((v, i) => (i === index ? 0 : Math.max(0, v)));
-  const othersSum = others.reduce((a, b) => a + b, 0);
-  const count = current.length - 1;
-  return current.map((_, i) => {
-    if (i === index) return target;
-    if (count === 0) return 0;
-    return othersSum === 0 ? remaining / count : (others[i] / othersSum) * remaining;
-  });
+export function adjustLeastRecent(
+  current: number[],
+  index: number,
+  value: number,
+  touchOrder: number[],
+): { values: number[]; touchOrder: number[] } {
+  const values = current.map((v) => Math.min(100, Math.max(0, v)));
+  values[index] = Math.min(100, Math.max(0, value));
+  let excess = values.reduce((a, b) => a + b, 0) - 100;
+  for (const i of touchOrder) {
+    if (Math.abs(excess) < 1e-9) break;
+    if (i === index) continue;
+    const next = Math.min(100, Math.max(0, values[i] - excess));
+    excess -= values[i] - next;
+    values[i] = next;
+  }
+  return { values, touchOrder: [...touchOrder.filter((i) => i !== index), index] };
+}
+
+/** Mueve un elemento de `from` a `to` (índices del array original). */
+export function arrayMove<T>(items: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return items;
+  const next = [...items];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
 }
