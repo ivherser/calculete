@@ -7,6 +7,10 @@ Calculadora personal de ingresos, gastos y balance anual.
 - **Sin login**: los datos se guardan en `localStorage` del navegador.
 - **Con login** (icono arriba a la derecha; email + contraseña): los datos se guardan en la tabla
   `public.entries` asociados a tu usuario. En el primer login se ofrece importar los datos locales a la cuenta.
+  - *Crear cuenta*: la crea el servidor (`POST /api/auth/signup`, con la service role key) **ya confirmada**, sin email de
+    confirmación, y entra directamente. No depende del ajuste *Confirm email* de Supabase.
+  - *¿Has olvidado tu contraseña?*: envía un enlace al email que lleva a `/restablecer` para poner una contraseña nueva
+    (hay que abrirlo en el mismo navegador donde se pidió).
 - **`/admin`**: sin enlace en la navegación. Solo accesible para administradores; lista los usuarios que han iniciado
   sesión y permite ver sus datos. Las consultas se hacen en servidor con `SUPABASE_SERVICE_ROLE_KEY`.
 
@@ -33,7 +37,7 @@ Calculadora personal de ingresos, gastos y balance anual.
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | cliente + servidor | URL del proyecto Supabase (`https://<ref>.supabase.co`). |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | cliente + servidor | Clave pública *anon* del proyecto. Si no existe se usa `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (la que crea la integración de Vercel). |
-| `SUPABASE_SERVICE_ROLE_KEY` | **solo servidor** | Clave *service_role*. Solo la usa `/admin`. Nunca la publiques ni le pongas prefijo `NEXT_PUBLIC_`. |
+| `SUPABASE_SERVICE_ROLE_KEY` | **solo servidor** | Clave *service_role*. La usan `/admin` y el alta de cuentas (`/api/auth/signup`). Nunca la publiques ni le pongas prefijo `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_APP_VERSION` | cliente | Opcional. Versión mostrada en la cabecera. Si no se define se usa la constante de `src/lib/version.ts` (`v1.<nº PR>`). |
 | `ADMIN_EMAILS` | solo servidor | Opcional. Emails admin separados por comas (deben tener el email confirmado). |
 | `ADMIN_USER_IDS` | solo servidor | Opcional. IDs (uuid) de usuarios admin separados por comas. |
@@ -53,10 +57,11 @@ En local, copia `.env.example` a `.env.local` y rellena los valores (`.env*` est
    - Alternativa con la CLI: `supabase link --project-ref <ref>` y `supabase db push`.
 3. **Authentication → URL Configuration**:
    - *Site URL*: la URL de producción (p. ej. `https://calculete.vercel.app`).
-   - *Redirect URLs*: añade `https://<tu-dominio>/auth/callback`, `https://*-<tu-equipo>.vercel.app/auth/callback`
-     (previews) y `http://localhost:3000/auth/callback`.
-4. **Authentication → Providers → Email**: deja activado *Confirm email* (recomendado; los admins por email exigen email
-   confirmado).
+   - *Redirect URLs* (las usa el enlace de recuperación de contraseña): añade `https://<tu-dominio>/**`,
+     `https://*-<tu-equipo>.vercel.app/**` (previews) y `http://localhost:3000/**`.
+4. **Authentication → Providers → Email**: el proveedor Email debe estar activado. *Confirm email* no afecta a las
+   cuentas creadas desde calculete (se crean confirmadas). El email de recuperación usa el SMTP de Supabase, que por
+   defecto tiene un límite bajo de envíos por hora; para producción conviene configurar un SMTP propio.
 5. Da permisos de admin a tu usuario (tras iniciar sesión una vez), con `ADMIN_EMAILS`/`ADMIN_USER_IDS` o con:
 
    ```sql
