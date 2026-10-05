@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useCalculeteData } from "@/hooks/useCalculeteData";
+import { arrayMove } from "@/lib/balance";
 import { MAX_ENTRIES, newEntry } from "@/lib/entries";
 import { loadDistribution, saveDistribution } from "@/lib/storage";
 import type { Entry, EntryKind } from "@/lib/types";
@@ -17,6 +18,7 @@ export function CalculeteApp() {
   const [authOpen, setAuthOpen] = useState(false);
   const [distribution, setDistribution] = useState<number[] | null>(null);
   const [authError, setAuthError] = useState(false);
+  const [focusId, setFocusId] = useState<string | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- lectura de localStorage tras hidratar
@@ -34,8 +36,22 @@ export function CalculeteApp() {
   }, []);
 
   const add = useCallback(
-    (kind: EntryKind) =>
-      setEntries((prev) => (prev.length >= MAX_ENTRIES ? prev : [...prev, newEntry(kind)])),
+    (kind: EntryKind) => {
+      const entry = newEntry(kind);
+      setFocusId(entry.id);
+      setEntries((prev) => (prev.length >= MAX_ENTRIES ? prev : [...prev, entry]));
+    },
+    [setEntries],
+  );
+  const move = useCallback(
+    (id: string, targetId: string) =>
+      setEntries((prev) =>
+        arrayMove(
+          prev,
+          prev.findIndex((e) => e.id === id),
+          prev.findIndex((e) => e.id === targetId),
+        ),
+      ),
     [setEntries],
   );
   const change = useCallback(
@@ -82,17 +98,21 @@ export function CalculeteApp() {
               kind="income"
               title="Ingresos"
               entries={incomes}
+              focusId={focusId}
               onAdd={() => add("income")}
               onChange={change}
               onRemove={remove}
+              onMove={move}
             />
             <EntriesTable
               kind="expense"
               title="Gastos"
               entries={expenses}
+              focusId={focusId}
               onAdd={() => add("expense")}
               onChange={change}
               onRemove={remove}
+              onMove={move}
             />
             <BalanceSection entries={entries} distribution={distribution} onDistributionChange={updateDistribution} />
           </>

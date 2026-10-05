@@ -3,7 +3,8 @@ import {
   expensesByConcept,
   monthlyBalance,
   normalizePercentages,
-  rebalancePercentages,
+  adjustLeastRecent,
+  arrayMove,
   safetyCushion,
 } from "./balance";
 import type { Entry } from "./types";
@@ -55,9 +56,29 @@ describe("percentages", () => {
     expect(normalizePercentages([1, 1, 2])).toEqual([25, 25, 50]);
     expect(normalizePercentages([0, 0, 0]).reduce((a, b) => a + b)).toBeCloseTo(100);
   });
-  it("rebalancea el resto proporcionalmente", () => {
-    const res = rebalancePercentages([40, 30, 30], 0, 70);
-    expect(res).toEqual([70, 15, 15]);
-    expect(rebalancePercentages([100, 0, 0], 0, 50)).toEqual([50, 25, 25]);
+});
+
+describe("adjustLeastRecent", () => {
+  it("solo mueve el concepto tocado hace más tiempo", () => {
+    const res = adjustLeastRecent([40, 30, 30], 0, 50, [0, 1, 2]);
+    expect(res.values).toEqual([50, 20, 30]);
+    expect(res.touchOrder).toEqual([1, 2, 0]);
+    const res2 = adjustLeastRecent(res.values, 2, 40, res.touchOrder);
+    expect(res2.values).toEqual([50, 10, 40]);
+    expect(res2.touchOrder).toEqual([1, 0, 2]);
+  });
+  it("si el menos reciente llega a 0, el resto pasa al siguiente", () => {
+    const res = adjustLeastRecent([40, 30, 30], 0, 80, [1, 2, 0]);
+    expect(res.values).toEqual([80, 0, 20]);
+  });
+  it("al bajar, el menos reciente absorbe el excedente", () => {
+    expect(adjustLeastRecent([40, 30, 30], 1, 10, [2, 0, 1]).values).toEqual([40, 10, 50]);
+  });
+});
+
+describe("arrayMove", () => {
+  it("mueve hacia abajo y hacia arriba", () => {
+    expect(arrayMove(["a", "b", "c", "d"], 0, 2)).toEqual(["b", "c", "a", "d"]);
+    expect(arrayMove(["a", "b", "c", "d"], 3, 1)).toEqual(["a", "d", "b", "c"]);
   });
 });
