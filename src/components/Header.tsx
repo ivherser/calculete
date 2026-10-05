@@ -6,10 +6,8 @@ import { APP_VERSION } from "@/lib/version";
 import type { SyncStatus } from "@/hooks/useCalculeteData";
 
 interface HeaderProps {
-  user: User | null;
-  supabaseEnabled: boolean;
+  user: User;
   syncStatus: SyncStatus;
-  onLogin: () => void;
   onLogout: () => void;
 }
 
@@ -20,16 +18,7 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
   error: "Error al guardar",
 };
 
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5" aria-hidden>
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function Header({ user, supabaseEnabled, syncStatus, onLogin, onLogout }: HeaderProps) {
+export function Header({ user, syncStatus, onLogout }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -53,55 +42,41 @@ export function Header({ user, supabaseEnabled, syncStatus, onLogin, onLogout }:
         </div>
 
         <div className="flex items-center gap-3">
-          {user && syncStatus !== "idle" && (
+          {syncStatus !== "idle" && (
             <span
               className={`hidden text-xs sm:inline ${syncStatus === "error" ? "text-rose-600" : "text-slate-500"}`}
             >
               {SYNC_LABEL[syncStatus]}
             </span>
           )}
-          {!user && (
+          <div className="relative" ref={menuRef}>
             <button
               type="button"
-              onClick={onLogin}
-              disabled={!supabaseEnabled}
-              title={supabaseEnabled ? "Iniciar sesión" : "Inicio de sesión no configurado"}
-              aria-label="Iniciar sesión"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Cuenta"
+              aria-expanded={menuOpen}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold uppercase text-white hover:bg-indigo-700"
             >
-              <UserIcon />
+              {(user.email ?? "?").charAt(0)}
             </button>
-          )}
-          {user && (
-            <div className="relative" ref={menuRef}>
-              <button
-                type="button"
-                onClick={() => setMenuOpen((o) => !o)}
-                aria-label="Cuenta"
-                aria-expanded={menuOpen}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold uppercase text-white hover:bg-indigo-700"
-              >
-                {(user.email ?? "?").charAt(0)}
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-                  <p className="truncate px-2 py-1.5 text-sm text-slate-600" title={user.email ?? ""}>
-                    {user.email}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onLogout();
-                    }}
-                    className="w-full rounded-lg px-2 py-1.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50"
-                  >
-                    Cerrar sesión
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                <p className="truncate px-2 py-1.5 text-sm text-slate-600" title={user.email ?? ""}>
+                  {user.email}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onLogout();
+                  }}
+                  className="w-full rounded-lg px-2 py-1.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

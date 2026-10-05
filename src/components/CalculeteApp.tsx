@@ -6,16 +6,15 @@ import { arrayMove } from "@/lib/balance";
 import { MAX_ENTRIES, newEntry } from "@/lib/entries";
 import { loadDistribution, saveDistribution } from "@/lib/storage";
 import type { Entry, EntryKind } from "@/lib/types";
-import { AuthDialog } from "./AuthDialog";
 import { BalanceSection } from "./BalanceSection";
 import { EntriesTable } from "./EntriesTable";
 import { Header } from "./Header";
+import { LoginScreen } from "./LoginScreen";
 import { MigrationDialog } from "./MigrationDialog";
 
 export function CalculeteApp() {
   const data = useCalculeteData();
   const { entries, setEntries } = data;
-  const [authOpen, setAuthOpen] = useState(false);
   const [distribution, setDistribution] = useState<number[] | null>(null);
   const [authError, setAuthError] = useState(false);
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -63,30 +62,19 @@ export function CalculeteApp() {
   const incomes = entries.filter((e) => e.kind === "income");
   const expenses = entries.filter((e) => e.kind === "expense");
 
+  if (!data.authReady) {
+    return <p className="py-32 text-center text-slate-400">Cargando…</p>;
+  }
+  if (!data.user) return <LoginScreen authError={authError} />;
+
   return (
     <>
-      <Header
-        user={data.user}
-        supabaseEnabled={data.supabaseEnabled}
-        syncStatus={data.syncStatus}
-        onLogin={() => setAuthOpen(true)}
-        onLogout={() => void data.signOut()}
-      />
+      <Header user={data.user} syncStatus={data.syncStatus} onLogout={() => void data.signOut()} />
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
-        {authError && (
-          <p role="alert" className="rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-800">
-            El enlace de acceso no es válido o ha caducado. Vuelve a intentarlo.
-          </p>
-        )}
         {data.loadError && (
           <p role="alert" className="rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-800">
             {data.loadError}
-          </p>
-        )}
-        {!data.user && data.ready && (
-          <p className="text-sm text-slate-500">
-            Estás usando calculete sin cuenta: tus datos se guardan solo en este navegador.
           </p>
         )}
 
@@ -121,7 +109,6 @@ export function CalculeteApp() {
 
       <footer className="mx-auto max-w-7xl px-4 pb-8 text-xs text-slate-400">calculete</footer>
 
-      {data.supabaseEnabled && <AuthDialog open={authOpen && !data.user} onClose={() => setAuthOpen(false)} />}
       {data.pendingMigration && (
         <MigrationDialog
           count={data.pendingMigration.length}

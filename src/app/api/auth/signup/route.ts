@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createRateLimiter, credentialsSchema } from "@/lib/auth";
-import { isAdminEmail } from "@/lib/admin";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 const allowSignup = createRateLimiter(5, 10 * 60 * 1000);
@@ -20,9 +19,6 @@ export async function POST(request: NextRequest) {
   const body: unknown = await request.json().catch(() => null);
   const parsed = credentialsSchema.safeParse(body);
   if (!parsed.success) return fail(400, "invalid_input");
-  // Las cuentas se crean confirmadas: si se permitiera registrar un email de ADMIN_EMAILS,
-  // cualquiera podría reclamarlo antes que su dueño y entrar en /admin.
-  if (isAdminEmail(parsed.data.email)) return fail(400, "signup_failed");
 
   const admin = getAdminSupabase();
   if (!admin) return fail(503, "signup_not_configured");

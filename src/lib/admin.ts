@@ -8,7 +8,6 @@ function envList(name: string): string[] {
     .filter(Boolean);
 }
 
-/** Emails de ADMIN_EMAILS: no se pueden registrar desde la app (se crean desde el panel de Supabase). */
 export function isAdminEmail(email: string): boolean {
   return envList("ADMIN_EMAILS").includes(email.trim().toLowerCase());
 }

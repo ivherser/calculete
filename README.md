@@ -4,11 +4,11 @@ Calculadora personal de ingresos, gastos y balance anual.
 
 - **Stack**: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + Recharts, desplegable en Vercel.
 - **Backend**: Supabase (Auth + Postgres con RLS).
-- **Sin login**: los datos se guardan en `localStorage` del navegador.
-- **Con login** (icono arriba a la derecha; email + contraseña): los datos se guardan en la tabla
-  `public.entries` asociados a tu usuario. En el primer login se ofrece importar los datos locales a la cuenta.
+- **Requiere cuenta**: sin sesión se muestra una pantalla de inicio (entrar, crear cuenta, recuperar contraseña).
+  Los datos se guardan en la tabla `public.entries` asociados a tu usuario. Si quedaban datos en `localStorage` de
+  versiones anteriores (modo sin cuenta), en el primer login se ofrece importarlos.
   - *Crear cuenta*: la crea el servidor (`POST /api/auth/signup`, con la service role key) **ya confirmada**, sin email de
-    confirmación, y entra directamente. Las contraseñas nuevas deben tener entre 12 y 72 caracteres. No depende del ajuste *Confirm email* de Supabase.
+    confirmación, y entra directamente. La app no impone longitud mínima de contraseña (solo máx. 72); se aplica la que tenga configurada Supabase (6 por defecto). No depende del ajuste *Confirm email* de Supabase.
   - *¿Has olvidado tu contraseña?*: envía un enlace al email que lleva a `/restablecer` para poner una contraseña nueva
     (hay que abrirlo en el mismo navegador donde se pidió).
 - **`/admin`**: sin enlace en la navegación. Solo accesible para administradores; lista los usuarios que han iniciado
@@ -39,7 +39,7 @@ Calculadora personal de ingresos, gastos y balance anual.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | cliente + servidor | Clave pública *anon* del proyecto. Si no existe se usa `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (la que crea la integración de Vercel). |
 | `SUPABASE_SERVICE_ROLE_KEY` | **solo servidor** | Clave *service_role*. La usan `/admin` y el alta de cuentas (`/api/auth/signup`). Nunca la publiques ni le pongas prefijo `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_APP_VERSION` | cliente | Opcional. Versión mostrada en la cabecera. Si no se define se usa la constante de `src/lib/version.ts` (`v1.<nº PR>`). |
-| `ADMIN_EMAILS` | solo servidor | Opcional. Emails admin separados por comas. Estos emails **no** se pueden registrar desde la app: crea esa cuenta en Supabase → Authentication → Users → *Add user* (marcando *Auto Confirm User*). |
+| `ADMIN_EMAILS` | solo servidor | Opcional. Emails admin separados por comas. Como el alta desde la app crea cuentas ya confirmadas, registra cuanto antes los emails que pongas aquí: si no, otra persona podría registrarlos y entrar en `/admin`. |
 | `ADMIN_USER_IDS` | solo servidor | Opcional. IDs (uuid) de usuarios admin separados por comas. |
 
 Si no se definen las variables de Supabase la app funciona solo en modo local (el botón de login queda deshabilitado).
