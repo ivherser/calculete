@@ -45,8 +45,8 @@ const tooltipEuro = (v: unknown) => formatEuro(Number(v));
 
 function Card({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}>
-      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
+    <div className={`rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm ${className}`}>
+      <h3 className="mb-1.5 text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
       {children}
     </div>
   );
@@ -54,10 +54,7 @@ function Card({ title, children, className = "" }: { title: string; children: Re
 
 function MonthlyAverageNote({ value }: { value: number }) {
   return (
-    <span className="text-right text-xs leading-tight tabular-nums text-slate-500">
-      {formatEuro(value)}
-      <span className="block">/ mes</span>
-    </span>
+    <span className="whitespace-nowrap text-right text-xs tabular-nums text-slate-500">{formatEuro(value)} / mes</span>
   );
 }
 
