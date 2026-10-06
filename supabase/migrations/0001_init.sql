@@ -11,7 +11,7 @@ create table if not exists public.entries (
   concept     text not null default '' check (char_length(concept) <= 120),
   amount      numeric(14, 2) not null default 0 check (amount >= 0 and amount <= 1000000000),
   periodicity text not null default 'mensual'
-              check (periodicity in ('mensual', 'bimensual', 'trimestral', 'semestral', 'anual', 'puntual')),
+              check (periodicity in ('mensual', 'bimensual', 'trimestral', 'cuatrimestral', 'semestral', 'anual', 'puntual')),
   -- Meses activos como índices 0 (ENE) .. 11 (DIC)
   months      smallint[] not null default '{}'
               check (months <@ array[0,1,2,3,4,5,6,7,8,9,10,11]::smallint[]),

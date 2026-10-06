@@ -22,7 +22,7 @@ import {
   monthlyBalance,
   normalizePercentages,
   safetyCushion,
-  SAFETY_CUSHION_MONTHS,
+  SAFETY_CUSHION_MULTIPLIERS,
   type MonthlyBalance,
 } from "@/lib/balance";
 import { formatEuro, formatPercent } from "@/lib/format";
@@ -54,7 +54,12 @@ function Card({ title, children, className = "" }: { title: string; children: Re
 }
 
 function MonthlyAverageNote({ value }: { value: number }) {
-  return <p className="mt-1 text-xs tabular-nums text-slate-500">{formatEuro(value)} de media al mes</p>;
+  return (
+    <span className="text-right text-xs leading-tight tabular-nums text-slate-500">
+      {formatEuro(value)}
+      <span className="block">/ mes</span>
+    </span>
+  );
 }
 
 export function BalanceSection({ entries, distribution, onDistributionChange }: BalanceSectionProps) {
@@ -71,7 +76,7 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
     () => expensesByConcept(entries).map((c, i) => ({ ...c, fill: DONUT_COLORS[i % DONUT_COLORS.length] })),
     [entries],
   );
-  const { monthlyAverage, cushion } = useMemo(() => safetyCushion(entries), [entries]);
+  const { monthlyAverage, cushions } = useMemo(() => safetyCushion(entries), [entries]);
 
   const annualIncome = entries.filter((e) => e.kind === "income").reduce((a, e) => a + annualAmount(e), 0);
   const annualExpense = entries.filter((e) => e.kind === "expense").reduce((a, e) => a + annualAmount(e), 0);
@@ -92,18 +97,24 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card title="Ingresos anuales">
-          <p className="text-2xl font-bold tabular-nums text-emerald-600">{formatEuro(annualIncome)}</p>
-          <MonthlyAverageNote value={annualIncome / 12} />
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-2xl font-bold tabular-nums text-emerald-600">{formatEuro(annualIncome)}</p>
+            <MonthlyAverageNote value={annualIncome / 12} />
+          </div>
         </Card>
         <Card title="Gastos anuales">
-          <p className="text-2xl font-bold tabular-nums text-rose-600">{formatEuro(annualExpense)}</p>
-          <MonthlyAverageNote value={annualExpense / 12} />
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-2xl font-bold tabular-nums text-rose-600">{formatEuro(annualExpense)}</p>
+            <MonthlyAverageNote value={annualExpense / 12} />
+          </div>
         </Card>
         <Card title="Beneficio anual">
-          <p className={`text-2xl font-bold tabular-nums ${profit >= 0 ? "text-indigo-700" : "text-rose-600"}`}>
-            {formatEuro(profit)}
-          </p>
-          <MonthlyAverageNote value={profit / 12} />
+          <div className="flex items-baseline justify-between gap-3">
+            <p className={`text-2xl font-bold tabular-nums ${profit >= 0 ? "text-indigo-700" : "text-rose-600"}`}>
+              {formatEuro(profit)}
+            </p>
+            <MonthlyAverageNote value={profit / 12} />
+          </div>
         </Card>
       </div>
 
@@ -147,9 +158,16 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="Colchón de seguridad">
-          <p className="text-4xl font-extrabold tabular-nums text-indigo-700">{formatEuro(cushion)}</p>
-          <p className="mt-2 text-sm text-slate-500">
-            Gasto medio mensual ({formatEuro(monthlyAverage)}) × {SAFETY_CUSHION_MONTHS} meses.
+          <ul className="space-y-2">
+            {cushions.map((c) => (
+              <li key={c.months} className="flex items-baseline justify-between gap-3">
+                <span className="text-sm font-medium text-slate-500">× {c.months} meses</span>
+                <span className="text-2xl font-extrabold tabular-nums text-indigo-700">{formatEuro(c.amount)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm text-slate-500">
+            Gasto medio mensual: {formatEuro(monthlyAverage)} ({SAFETY_CUSHION_MULTIPLIERS.join(", ")} meses).
           </p>
         </Card>
 

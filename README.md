@@ -16,18 +16,18 @@ Calculadora personal de ingresos, gastos y balance anual.
 
 ## Funcionalidades
 
-- **Ingresos** y **Gastos**: filas con concepto, cantidad y periodicidad (mensual, bimensual, trimestral, semestral,
-  anual, puntual). El botón «+» bajo el último concepto, o pulsar Intro en un concepto, añade una fila nueva.
+- **Ingresos** y **Gastos**: filas con concepto, cantidad y periodicidad (mensual, bimensual, trimestral, cuatrimestral,
+  semestral, anual, puntual). El botón «+» bajo el último concepto, o pulsar Intro en un concepto, añade una fila nueva.
   Las filas se recolocan arrastrando el asa ⠿ (o con las flechas ↑/↓ con el asa enfocada).
 - **Matriz de meses (ENE–DIC)** por concepto: al pulsar un mes se autocompleta según la periodicidad desde ese mes
   (cíclico sobre el año, p. ej. trimestral desde NOV → NOV, FEB, MAY, AGO). Pulsar otro mes recalcula el patrón;
-  pulsar un mes marcado lo desmarca. La cantidad se aplica en cada mes marcado.
+  pulsar un mes marcado lo desmarca. En «puntual» se marcan libremente los meses que se quieran. La cantidad se aplica en cada mes marcado.
 - **Balance**:
-  - Evolución mensual de ingresos − gastos (barras) y acumulado (línea).
+  - Evolución mensual: ingresos y gastos (barras) y balance (línea).
   - Donut con los principales gastos anuales por concepto.
   - Balance parcial: tabla mes a mes con ingresos, gastos, lo que queda y el acumulado, más media mensual y total
     anual.
-  - Colchón de seguridad: gasto medio mensual × 9.
+  - Colchón de seguridad: gasto medio mensual × 5, × 8 y × 13.
   - Distribución del beneficio anual en ahorro, inversión y gastos con un slider por concepto (siempre suman 100 %).
     Al mover un slider solo se ajusta el concepto que hace más tiempo que no se toca.
 
@@ -54,6 +54,8 @@ En local, copia `.env.example` a `.env.local` y rellena los valores (`.env*` est
    - `public.entries` (concepto, cantidad, periodicidad, `months smallint[]` con los meses activos 0–11, `user_id`)
      con RLS: cada usuario solo puede leer/escribir sus propias filas.
    - `public.admins` con RLS y sin políticas (solo accesible con la service role key).
+   Si ya lo habías ejecutado antes, ejecuta también [`supabase/migrations/0002_cuatrimestral.sql`](supabase/migrations/0002_cuatrimestral.sql)
+   (añade la periodicidad cuatrimestral).
    - Alternativa con la CLI: `supabase link --project-ref <ref>` y `supabase db push`.
 3. **Authentication → URL Configuration**:
    - *Site URL*: la URL de producción (p. ej. `https://calculete.vercel.app`).

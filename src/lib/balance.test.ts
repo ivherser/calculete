@@ -44,10 +44,12 @@ describe("expensesByConcept", () => {
 });
 
 describe("safetyCushion", () => {
-  it("gasto medio mensual × 9", () => {
-    const { monthlyAverage, cushion } = safetyCushion(entries);
-    expect(monthlyAverage).toBeCloseTo((9600 + 600) / 12);
-    expect(cushion).toBeCloseTo(((9600 + 600) / 12) * 9);
+  it("gasto medio mensual × 5, × 8 y × 13", () => {
+    const { monthlyAverage, cushions } = safetyCushion(entries);
+    const avg = (9600 + 600) / 12;
+    expect(monthlyAverage).toBeCloseTo(avg);
+    expect(cushions.map((c) => c.months)).toEqual([5, 8, 13]);
+    cushions.forEach((c) => expect(c.amount).toBeCloseTo(avg * c.months));
   });
 });
 
