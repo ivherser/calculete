@@ -22,7 +22,6 @@ import {
   monthlyBalance,
   normalizePercentages,
   safetyCushion,
-  SAFETY_CUSHION_MULTIPLIERS,
   type MonthlyBalance,
 } from "@/lib/balance";
 import { formatEuro, formatPercent } from "@/lib/format";
@@ -167,7 +166,7 @@ export function BalanceSection({ entries, distribution, onDistributionChange }: 
             ))}
           </ul>
           <p className="mt-3 text-sm text-slate-500">
-            Gasto medio mensual: {formatEuro(monthlyAverage)} ({SAFETY_CUSHION_MULTIPLIERS.join(", ")} meses).
+            Gasto medio mensual: {formatEuro(monthlyAverage)}.
           </p>
         </Card>
 
