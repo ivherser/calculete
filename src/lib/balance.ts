@@ -1,6 +1,6 @@
 import type { Entry } from "./types";
 
-export const SAFETY_CUSHION_MONTHS = 9;
+export const SAFETY_CUSHION_MULTIPLIERS = [5, 8, 13] as const;
 
 export function annualAmount(entry: Pick<Entry, "amount" | "months">): number {
   return entry.amount * entry.months.length;
@@ -54,12 +54,18 @@ export function expensesByConcept(entries: Entry[], top = 6): ConceptTotal[] {
   return [...sorted.slice(0, top), { name: "Otros", value: rest }];
 }
 
-export function safetyCushion(entries: Entry[]): { monthlyAverage: number; cushion: number } {
+export function safetyCushion(entries: Entry[]): {
+  monthlyAverage: number;
+  cushions: { months: number; amount: number }[];
+} {
   const annualExpense = entries
     .filter((e) => e.kind === "expense")
     .reduce((acc, e) => acc + annualAmount(e), 0);
   const monthlyAverage = annualExpense / 12;
-  return { monthlyAverage, cushion: monthlyAverage * SAFETY_CUSHION_MONTHS };
+  return {
+    monthlyAverage,
+    cushions: SAFETY_CUSHION_MULTIPLIERS.map((months) => ({ months, amount: monthlyAverage * months })),
+  };
 }
 
 /** Normaliza pesos arbitrarios (≥ 0) para que sumen 100. Si todos son 0, reparte a partes iguales. */
