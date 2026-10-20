@@ -1,4 +1,5 @@
 import { parseEntries } from "./entries";
+import { parseTasks, type Task } from "./tasks";
 import type { Entry } from "./types";
 
 const ENTRIES_KEY = "calculete:entries:v1";
@@ -67,4 +68,14 @@ export function wasMigrationAsked(userId: string): boolean {
 
 export function markMigrationAsked(userId: string): void {
   safeSet(MIGRATION_KEY_PREFIX + userId, "1");
+}
+
+const TASKS_KEY = "calculete:tasks:v1";
+
+export function loadLocalTasks(): Task[] {
+  return parseTasks(safeParse(safeGet(TASKS_KEY)));
+}
+
+export function saveLocalTasks(tasks: Task[]): void {
+  safeSet(TASKS_KEY, JSON.stringify(tasks));
 }

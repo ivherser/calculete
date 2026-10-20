@@ -2,8 +2,8 @@ const DEG = Math.PI / 180;
 
 export const DAYS_IN_YEAR = 365;
 
-/** Latitud por defecto: Madrid. */
-export const DEFAULT_LATITUDE = 40.4;
+/** Latitud por defecto: Valladolid. */
+export const DEFAULT_LATITUDE = 41.65;
 
 /** Día del año (1–365) del primer día de cada mes en un año no bisiesto. */
 export const MONTH_START_DAYS = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
@@ -36,29 +36,49 @@ export function annualOptimalTilt(latitude: number): number {
   return clampTilt(3.7 + 0.69 * latitude);
 }
 
-/** Estación astronómica (hemisferio norte) del día del año `n`. */
+/** Días del año en que se cambia la inclinación: 3 mar, 17 abr, 23 ago y 6 oct. */
+export const SEASON_START_DAYS: Record<Season, number> = { primavera: 62, verano: 107, otono: 235, invierno: 279 };
+
+/** Periodo (estación) de inclinación al que pertenece el día del año `n`. */
 export function seasonOfDay(n: number): Season {
-  if (n >= 79 && n < 172) return "primavera"; // 20 mar – 20 jun
-  if (n >= 172 && n < 266) return "verano"; // 21 jun – 22 sep
-  if (n >= 266 && n < 355) return "otono"; // 23 sep – 20 dic
-  return "invierno"; // 21 dic – 19 mar
+  if (n >= SEASON_START_DAYS.primavera && n < SEASON_START_DAYS.verano) return "primavera";
+  if (n >= SEASON_START_DAYS.verano && n < SEASON_START_DAYS.otono) return "verano";
+  if (n >= SEASON_START_DAYS.otono && n < SEASON_START_DAYS.invierno) return "otono";
+  return "invierno";
 }
 
-/** Inclinación fija óptima para cada estación: media de la inclinación diaria a lo largo de la estación. */
+/**
+ * Irradiación extraterrestre diaria (relativa) sobre un plano orientado al sur con inclinación `tilt`
+ * (fórmula de Klein para superficies inclinadas).
+ */
+export function dailyTiltedIrradiation(latitude: number, tilt: number, n: number): number {
+  const phi = latitude * DEG;
+  const delta = solarDeclination(n) * DEG;
+  const eff = (latitude - tilt) * DEG;
+  const clampCos = (x: number) => Math.acos(Math.min(1, Math.max(-1, x)));
+  const sunset = clampCos(-Math.tan(phi) * Math.tan(delta));
+  const sunsetTilted = Math.min(sunset, clampCos(-Math.tan(eff) * Math.tan(delta)));
+  const value = Math.cos(eff) * Math.cos(delta) * Math.sin(sunsetTilted) + sunsetTilted * Math.sin(eff) * Math.sin(delta);
+  return Math.max(0, value);
+}
+
+/** Inclinación fija que maximiza la irradiación recibida en cada periodo (búsqueda en pasos de 0,1°). */
 export function seasonalOptimalTilts(latitude: number): Record<Season, number> {
-  const sum: Record<Season, number> = { invierno: 0, primavera: 0, verano: 0, otono: 0 };
-  const count: Record<Season, number> = { invierno: 0, primavera: 0, verano: 0, otono: 0 };
-  for (let n = 1; n <= DAYS_IN_YEAR; n++) {
-    const s = seasonOfDay(n);
-    sum[s] += dailyOptimalTilt(latitude, n);
-    count[s]++;
+  const days: Record<Season, number[]> = { invierno: [], primavera: [], verano: [], otono: [] };
+  for (let n = 1; n <= DAYS_IN_YEAR; n++) days[seasonOfDay(n)].push(n);
+  const result = { invierno: 0, primavera: 0, verano: 0, otono: 0 };
+  for (const s of SEASONS) {
+    let best = -Infinity;
+    for (let t = 0; t <= 900; t++) {
+      const tilt = t / 10;
+      const total = days[s].reduce((acc, n) => acc + dailyTiltedIrradiation(latitude, tilt, n), 0);
+      if (total > best) {
+        best = total;
+        result[s] = tilt;
+      }
+    }
   }
-  return {
-    invierno: sum.invierno / count.invierno,
-    primavera: sum.primavera / count.primavera,
-    verano: sum.verano / count.verano,
-    otono: sum.otono / count.otono,
-  };
+  return result;
 }
 
 /** Día del año (1–365) de una fecha; el 29 de febrero se trata como el 28. */

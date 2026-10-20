@@ -16,6 +16,9 @@ export type TriangleInput = Partial<Record<TriangleKey, number>>;
 export type SolveResult = { ok: true; solutions: Triangle[] } | { ok: false; error: string };
 
 const OPPOSITE: Record<SideKey, AngleKey> = { a: "A", b: "B", c: "C" };
+
+/** Nombre mostrado de cada valor: lados a, b, c y ángulos α, β, γ. */
+export const KEY_LABELS: Record<TriangleKey, string> = { a: "a", b: "b", c: "c", A: "α", B: "β", C: "γ" };
 const sin = (deg: number) => Math.sin(deg * DEG);
 const cos = (deg: number) => Math.cos(deg * DEG);
 const acosDeg = (x: number) => Math.acos(Math.min(1, Math.max(-1, x))) / DEG;
@@ -43,8 +46,8 @@ export function solveTriangle(input: TriangleInput): SolveResult {
   const entries = TRIANGLE_KEYS.filter((k) => input[k] !== undefined);
   for (const k of entries) {
     const v = input[k]!;
-    if (!Number.isFinite(v) || v <= 0) return fail(`El valor de ${k} debe ser un número mayor que 0.`);
-    if ((ANGLE_KEYS as readonly string[]).includes(k) && v >= 180) return fail(`El ángulo ${k} debe ser menor que 180°.`);
+    if (!Number.isFinite(v) || v <= 0) return fail(`El valor de ${KEY_LABELS[k]} debe ser un número mayor que 0.`);
+    if ((ANGLE_KEYS as readonly string[]).includes(k) && v >= 180) return fail(`El ángulo ${KEY_LABELS[k]} debe ser menor que 180°.`);
   }
   if (entries.length < 3) return fail("Faltan datos: introduce 3 valores, con al menos un lado.");
   if (entries.length > 3) return fail("Introduce exactamente 3 valores; deja vacíos los que quieras calcular.");
@@ -100,28 +103,111 @@ export function solveTriangle(input: TriangleInput): SolveResult {
   return { ok: true, solutions };
 }
 
-/** Triángulo rectángulo con C = 90° (c es la hipotenusa) a partir de exactamente 2 valores. */
-export function solveRightTriangle(input: Omit<TriangleInput, "C">): SolveResult {
-  const keys = (["a", "b", "c", "A", "B"] as const).filter((k) => input[k] !== undefined);
+/** Triángulo rectángulo con α = 90° (a es la hipotenusa) a partir de exactamente 2 valores. */
+export function solveRightTriangle(input: Omit<TriangleInput, "A">): SolveResult {
+  const keys = (["a", "b", "c", "B", "C"] as const).filter((k) => input[k] !== undefined);
   if (keys.length < 2) return fail("Faltan datos: introduce 2 valores, con al menos un lado.");
   if (keys.length > 2) return fail("Introduce exactamente 2 valores; deja vacíos los que quieras calcular.");
-  for (const k of ["A", "B"] as const) {
+  for (const k of ["B", "C"] as const) {
     const v = input[k];
-    if (v !== undefined && Number.isFinite(v) && v >= 90) return fail(`En un triángulo rectángulo el ángulo ${k} debe ser menor que 90°.`);
+    if (v !== undefined && Number.isFinite(v) && v >= 90) return fail(`En un triángulo rectángulo el ángulo ${KEY_LABELS[k]} debe ser menor que 90°.`);
   }
-  if (input.A !== undefined && input.B !== undefined) {
-    if (Math.abs(input.A + input.B - 90) > 1e-6) return fail("En un triángulo rectángulo A + B debe sumar 90°.");
+  if (input.B !== undefined && input.C !== undefined) {
+    if (Math.abs(input.B + input.C - 90) > 1e-6) return fail("En un triángulo rectángulo β + γ debe sumar 90°.");
     return fail("Con solo los ángulos no se puede saber el tamaño: introduce al menos un lado.");
   }
-  if (input.c !== undefined) {
-    for (const k of ["a", "b"] as const) {
+  if (input.a !== undefined) {
+    for (const k of ["b", "c"] as const) {
       const v = input[k];
-      if (v !== undefined && v >= input.c) return fail(`La hipotenusa c debe ser mayor que el cateto ${k}.`);
+      if (v !== undefined && v >= input.a) return fail(`La hipotenusa a debe ser mayor que el cateto ${k}.`);
     }
   }
-  return solveTriangle({ ...input, C: 90 });
+  return solveTriangle({ ...input, A: 90 });
 }
 
 export function triangleArea(t: Triangle): number {
   return 0.5 * t.b * t.c * sin(t.A);
+}
+
+export const RIGHT_EDITABLE_KEYS: readonly TriangleKey[] = ["a", "b", "c", "B", "C"];
+
+export function editableKeys(right: boolean): readonly TriangleKey[] {
+  return right ? RIGHT_EDITABLE_KEYS : TRIANGLE_KEYS;
+}
+
+/** Valores que se usan para calcular el resto: los últimos 2 (rectángulo) o 3 (cualquiera) introducidos. */
+export function usedKeys(history: readonly TriangleKey[], right: boolean): TriangleKey[] {
+  const editable = editableKeys(right);
+  const needed = right ? 2 : 3;
+  const used = history.filter((k) => editable.includes(k)).slice(-needed);
+  for (const k of editable) {
+    if (used.length >= needed) break;
+    if (!used.includes(k)) used.unshift(k);
+  }
+  return used;
+}
+
+export const DEFAULT_RIGHT_HISTORY: readonly TriangleKey[] = ["b", "c"];
+
+export const DEFAULT_TRIANGLE: Triangle = (() => {
+  const result = solveRightTriangle({ b: 3, c: 4 });
+  if (!result.ok) throw new Error(result.error);
+  return result.solutions[0];
+})();
+
+export type EditResult =
+  | { ok: true; triangle: Triangle; history: TriangleKey[]; adjusted: TriangleKey | null }
+  | { ok: false; error: string };
+
+function pick(input: TriangleInput, right: boolean): SolveResult {
+  if (!right) return solveTriangle(input);
+  const rest = { ...input };
+  delete rest.A;
+  return solveRightTriangle(rest);
+}
+
+function closest(solutions: Triangle[], current: Triangle): Triangle {
+  const distance = (t: Triangle) => TRIANGLE_KEYS.reduce((acc, k) => acc + Math.abs(t[k] - current[k]) / (Math.abs(current[k]) || 1), 0);
+  return solutions.reduce((best, t) => (distance(t) < distance(best) ? t : best));
+}
+
+/**
+ * Aplica la edición de un valor: se recalcula con los últimos valores introducidos. Si el conjunto no forma un
+ * triángulo, se ajusta el penúltimo valor manteniendo el resto (y la forma anterior cuando es posible).
+ */
+export function applyEdit(
+  current: Triangle,
+  history: readonly TriangleKey[],
+  key: TriangleKey,
+  value: number,
+  right: boolean,
+): EditResult {
+  const nextHistory = [...history.filter((k) => k !== key), key];
+  const used = usedKeys(nextHistory, right);
+  const values: Triangle = { ...current, [key]: value };
+  const inputOf = (keys: readonly TriangleKey[]) =>
+    Object.fromEntries(keys.map((k) => [k, values[k]])) as TriangleInput;
+
+  const direct = pick(inputOf(used), right);
+  if (direct.ok) return { ok: true, triangle: closest(direct.solutions, values), history: used, adjusted: null };
+
+  const penultimate = used[used.length - 2];
+  const others = used.filter((k) => k !== penultimate);
+  const extras = [...ANGLE_KEYS, ...SIDE_KEYS].filter((k) => editableKeys(right).includes(k) && !used.includes(k));
+  for (const extra of extras) {
+    const attempt = pick(inputOf([...others, extra]), right);
+    if (attempt.ok) {
+      return { ok: true, triangle: closest(attempt.solutions, values), history: used, adjusted: penultimate };
+    }
+  }
+  return { ok: false, error: direct.error };
+}
+
+/** Recalcula al cambiar de modo; en rectángulo fuerza α = 90°. */
+export function switchMode(current: Triangle, history: readonly TriangleKey[], right: boolean): { triangle: Triangle; history: TriangleKey[] } {
+  const used = usedKeys(history, right);
+  if (!right) return { triangle: current, history: used };
+  const result = pick(Object.fromEntries(used.map((k) => [k, current[k]])) as TriangleInput, true);
+  if (result.ok) return { triangle: closest(result.solutions, current), history: used };
+  return { triangle: DEFAULT_TRIANGLE, history: [...DEFAULT_RIGHT_HISTORY] };
 }
