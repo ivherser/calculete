@@ -21,10 +21,11 @@ interface DragState {
 const PLACEHOLDERS: Record<TaskScope, string> = {
   dia: "p. ej. Regar",
   semana: "p. ej. Sacar la basura",
+  mes: "p. ej. Pagar comunidad",
   anio: "p. ej. ITV",
 };
 
-const SLOT_HEADERS: Record<TaskScope, string> = { dia: "Momento del día", semana: "Días de la semana", anio: "Meses" };
+const SLOT_HEADERS: Record<TaskScope, string> = { dia: "Momento del día", semana: "Días de la semana", mes: "Días del mes", anio: "Meses" };
 
 function rowIdAt(x: number, y: number): string | null {
   const el = document.elementFromPoint(x, y);
@@ -35,7 +36,13 @@ function SlotGrid({ task, onToggle }: { task: Task; onToggle: (slot: number) => 
   const labels = TASK_SLOTS[task.scope];
   const active = new Set(task.slots);
   const layout =
-    task.scope === "dia" ? "grid grid-cols-3 gap-1" : task.scope === "semana" ? "grid grid-cols-7 gap-1" : "grid grid-cols-12 gap-1";
+    task.scope === "dia"
+      ? "grid grid-cols-3 gap-1"
+      : task.scope === "semana"
+        ? "grid grid-cols-7 gap-1"
+        : task.scope === "mes"
+          ? "grid grid-cols-16 gap-1"
+          : "grid grid-cols-12 gap-1";
   return (
     <div className={layout} role="group" aria-label={`${SLOT_HEADERS[task.scope]} de ${task.concept || "concepto"}`}>
       {labels.map((label, i) => {
@@ -47,7 +54,7 @@ function SlotGrid({ task, onToggle }: { task: Task; onToggle: (slot: number) => 
             aria-pressed={isOn}
             aria-label={`${label}${isOn ? " (marcado)" : ""}`}
             onClick={() => onToggle(i)}
-            className={`h-8 rounded-md border font-semibold transition ${task.scope === "anio" ? "min-w-8 text-[10px]" : "min-w-12 text-xs"} ${
+            className={`h-8 rounded-md border font-semibold transition ${task.scope === "anio" || task.scope === "mes" ? "min-w-8 text-[10px]" : "min-w-12 text-xs"} ${
               isOn
                 ? "border-indigo-500 bg-indigo-500 text-white"
                 : "border-slate-200 bg-white text-slate-400 hover:border-slate-400 hover:text-slate-700"
@@ -101,7 +108,7 @@ export function TasksTable({ scope, tasks, focusId, onAdd, onChange, onRemove, o
       </div>
 
       <div className="overflow-x-auto">
-        <table className={`w-full border-separate border-spacing-y-1 text-sm ${scope === "anio" ? "min-w-[860px]" : "min-w-[600px]"}`}>
+        <table className={`w-full border-separate border-spacing-y-1 text-sm ${scope === "anio" || scope === "mes" ? "min-w-[860px]" : "min-w-[600px]"}`}>
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="w-6" />

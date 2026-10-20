@@ -16,6 +16,8 @@ describe("toggleSlot", () => {
     expect(toggleSlot(newTask("dia"), 5).slots).toEqual([]);
     expect(toggleSlot(newTask("semana"), 7).slots).toEqual([]);
     expect(toggleSlot(newTask("semana"), 6).slots).toEqual([6]);
+    expect(toggleSlot(newTask("mes"), 30).slots).toEqual([30]);
+    expect(toggleSlot(newTask("mes"), 31).slots).toEqual([]);
   });
 });
 
@@ -46,7 +48,7 @@ describe("parseTasks", () => {
   it("drops tasks of removed scopes but keeps the rest", () => {
     expect(
       parseTasks([
-        { id: "old", scope: "mes", concept: "Comunidad", slots: [0] },
+        { id: "old", scope: "quincena", concept: "Comunidad", slots: [0] },
         { id: "ok", scope: "dia", concept: "Regar", slots: [0] },
       ]).map((t) => t.id),
     ).toEqual(["ok"]);
