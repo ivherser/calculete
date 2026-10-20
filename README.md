@@ -13,6 +13,9 @@ Calculadora personal de ingresos, gastos y balance anual.
     (hay que abrirlo en el mismo navegador donde se pidió).
 - **`/admin`**: sin enlace en la navegación. Solo accesible para administradores; lista los usuarios que han iniciado
   sesión y permite ver sus datos. Las consultas se hacen en servidor con `SUPABASE_SERVICE_ROLE_KEY`.
+- **`/sol`**: sin enlace en la navegación y sin login. Esquema de la instalación solar, gráfica del ángulo óptimo de
+  inclinación por día del año (anual y por estación, con la fecha actual marcada) y calculadora de triángulos
+  (rectángulo o cualquiera) con dibujo en tiempo real.
 
 ## Funcionalidades
 
