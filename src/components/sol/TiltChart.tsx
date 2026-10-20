@@ -1,7 +1,18 @@
 "use client";
 
 import { useMemo, useState, useSyncExternalStore } from "react";
-import { CartesianGrid, Legend, Line, LineChart, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ReferenceDot,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   annualOptimalTilt,
   dailyOptimalTilt,
@@ -10,6 +21,7 @@ import {
   DEFAULT_LATITUDE,
   MONTH_START_DAYS,
   SEASON_LABELS,
+  SEASON_START_DAYS,
   SEASONS,
   seasonalOptimalTilts,
   seasonOfDay,
@@ -108,6 +120,15 @@ export function TiltChart() {
                 isAnimationActive={false}
               />
             ))}
+            {SEASONS.map((s) => (
+              <ReferenceLine
+                key={`change-${s}`}
+                x={SEASON_START_DAYS[s]}
+                stroke="#94a3b8"
+                strokeDasharray="2 3"
+                label={{ value: dayLabel(SEASON_START_DAYS[s]), position: "insideTopRight", fontSize: 11, fill: "#64748b" }}
+              />
+            ))}
             {today !== null && todayTilt !== null && (
               <ReferenceDot x={today} y={todayTilt} r={6} fill="#dc2626" stroke="#fff" strokeWidth={2} ifOverflow="extendDomain" />
             )}
@@ -117,7 +138,8 @@ export function TiltChart() {
 
       <p className="text-xs text-slate-500">
         Paneles orientados al sur (hemisferio norte). Óptimo diario: panel perpendicular al sol al mediodía solar
-        (latitud − declinación). Estacional: media del óptimo diario en cada estación astronómica. Fijo anual:
+        (latitud − declinación). Periodos con cambio de inclinación el 3 MAR, 17 ABR, 23 AGO y 6 OCT; en cada uno el
+        ángulo es el que maximiza la radiación solar (extraterrestre) recibida en todo el periodo. Fijo anual:
         aproximación del IDAE (3,7 + 0,69 · latitud).
       </p>
     </div>

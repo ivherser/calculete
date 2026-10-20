@@ -1,0 +1,44 @@
+import { describe, expect, it } from "vitest";
+import { moveTask, newTask, parseTasks, toggleSlot, type Task } from "./tasks";
+
+const task = (id: string, scope: Task["scope"], slots: number[] = []): Task => ({ id, scope, concept: id, slots });
+
+describe("toggleSlot", () => {
+  it("adds and removes slots keeping them sorted", () => {
+    let t = newTask("dia");
+    t = toggleSlot(t, 2);
+    t = toggleSlot(t, 0);
+    expect(t.slots).toEqual([0, 2]);
+    expect(toggleSlot(t, 2).slots).toEqual([0]);
+  });
+
+  it("ignores slots outside the scope", () => {
+    expect(toggleSlot(newTask("dia"), 5).slots).toEqual([]);
+    expect(toggleSlot(newTask("mes"), 30).slots).toEqual([30]);
+  });
+});
+
+describe("moveTask", () => {
+  it("reorders within the same scope", () => {
+    const tasks = [task("a", "dia"), task("b", "mes"), task("c", "dia"), task("d", "dia")];
+    expect(moveTask(tasks, "d", "a").map((t) => t.id)).toEqual(["d", "a", "b", "c"]);
+  });
+
+  it("does not move across scopes", () => {
+    const tasks = [task("a", "dia"), task("b", "mes")];
+    expect(moveTask(tasks, "a", "b")).toBe(tasks);
+  });
+});
+
+describe("parseTasks", () => {
+  it("returns valid tasks and drops invalid slots", () => {
+    expect(parseTasks([{ id: "x", scope: "anio", concept: "ITV", slots: [11, 3, 3, 20] }])).toEqual([
+      { id: "x", scope: "anio", concept: "ITV", slots: [3, 11] },
+    ]);
+  });
+
+  it("returns an empty list for invalid data", () => {
+    expect(parseTasks(null)).toEqual([]);
+    expect(parseTasks([{ id: "x", scope: "semana", concept: "", slots: [] }])).toEqual([]);
+  });
+});

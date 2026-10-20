@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { solveRightTriangle, solveTriangle, triangleArea, type Triangle } from "./triangle";
+import {
+  applyEdit,
+  DEFAULT_TRIANGLE,
+  solveRightTriangle,
+  solveTriangle,
+  switchMode,
+  triangleArea,
+  usedKeys,
+  type Triangle,
+} from "./triangle";
 
 function expectTriangle(actual: Triangle, expected: Partial<Triangle>) {
   for (const [k, v] of Object.entries(expected)) expect(actual[k as keyof Triangle]).toBeCloseTo(v, 6);
@@ -100,5 +109,59 @@ describe("triangleArea", () => {
   it("computes the area", () => {
     const [t] = solved(solveRightTriangle({ a: 3, b: 4 }));
     expect(triangleArea(t)).toBeCloseTo(6, 9);
+  });
+});
+
+describe("usedKeys", () => {
+  it("takes the last 2 or 3 editable keys", () => {
+    expect(usedKeys(["a", "b", "c"], true)).toEqual(["b", "c"]);
+    expect(usedKeys(["a", "b", "C"], true)).toEqual(["a", "b"]);
+    expect(usedKeys(["a", "b"], false)).toEqual(["c", "a", "b"]);
+  });
+});
+
+describe("applyEdit", () => {
+  it("defaults to the 3-4-5 right triangle", () => {
+    expectTriangle(DEFAULT_TRIANGLE, { a: 3, b: 4, c: 5, C: 90 });
+  });
+
+  it("recalculates with the last two values in right mode", () => {
+    const r = applyEdit(DEFAULT_TRIANGLE, ["a", "b"], "c", 13, true);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.history).toEqual(["b", "c"]);
+    expect(r.adjusted).toBeNull();
+    expectTriangle(r.triangle, { b: 4, c: 13, a: Math.sqrt(153) });
+  });
+
+  it("adjusts the penultimate value when the last one is incompatible", () => {
+    const r = applyEdit(DEFAULT_TRIANGLE, ["a", "b"], "c", 2, true);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.adjusted).toBe("b");
+    expectTriangle(r.triangle, { c: 2, a: 1.2, b: 1.6 });
+  });
+
+  it("adjusts the penultimate angle when two angles exceed 180°", () => {
+    const start = applyEdit(DEFAULT_TRIANGLE, ["a", "b", "c"], "A", 100, false);
+    if (!start.ok) throw new Error(start.error);
+    const r = applyEdit(start.triangle, start.history, "B", 90, false);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.adjusted).toBe("A");
+    expect(r.triangle.B).toBeCloseTo(90, 9);
+    expect(r.triangle.A + r.triangle.B + r.triangle.C).toBeCloseTo(180, 9);
+  });
+
+  it("keeps the solution closest to the current one in the ambiguous case", () => {
+    const base = solved(solveTriangle({ a: 6, b: 8, A: 35 }))[1];
+    const r = applyEdit(base, ["a", "b", "A"], "A", 35.5, false);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.triangle.B).toBeGreaterThan(90);
+  });
+});
+
+describe("switchMode", () => {
+  it("forces γ = 90° when switching to right mode", () => {
+    const r = switchMode({ ...solved(solveTriangle({ a: 4, b: 5, c: 6 }))[0] }, ["a", "b", "c"], true);
+    expect(r.triangle.C).toBeCloseTo(90, 9);
+    expect(r.history).toEqual(["b", "c"]);
   });
 });

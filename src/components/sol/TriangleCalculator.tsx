@@ -1,34 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   ANGLE_KEYS,
+  applyEdit,
+  DEFAULT_TRIANGLE,
+  KEY_LABELS,
   SIDE_KEYS,
-  solveRightTriangle,
-  solveTriangle,
+  switchMode,
   triangleArea,
   type Triangle,
-  type TriangleInput,
   type TriangleKey,
 } from "@/lib/triangle";
 
-type RawValues = Record<TriangleKey, string>;
-
-const EMPTY: RawValues = { a: "", b: "", c: "", A: "", B: "", C: "" };
-
 const formatNumber = (v: number) => v.toLocaleString("es-ES", { maximumFractionDigits: 4 });
-
-function parseValues(raw: RawValues, keys: readonly TriangleKey[]): { input: TriangleInput; error?: string } {
-  const input: TriangleInput = {};
-  for (const k of keys) {
-    const text = raw[k].trim();
-    if (!text) continue;
-    const n = Number(text.replace(",", "."));
-    if (!Number.isFinite(n)) return { input, error: `El valor de ${k} no es un número válido.` };
-    input[k] = n;
-  }
-  return { input };
-}
 
 function TriangleSvg({ triangle, rightAngle }: { triangle: Triangle | null; rightAngle: boolean }) {
   const W = 360;
@@ -59,9 +44,9 @@ function TriangleSvg({ triangle, rightAngle }: { triangle: Triangle | null; righ
   };
   const mid = (p: readonly [number, number], q: readonly [number, number]) => away([(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], 16);
   const vertices = [
-    { label: "A", p: A, angle: t.A },
-    { label: "B", p: B, angle: t.B },
-    { label: "C", p: C, angle: t.C },
+    { label: "A", p: A, angle: t.A, name: "α" },
+    { label: "B", p: B, angle: t.B, name: "β" },
+    { label: "C", p: C, angle: t.C, name: "γ" },
   ];
   const sides = [
     { label: "a", p: mid(B, C), value: t.a },
@@ -97,7 +82,12 @@ function TriangleSvg({ triangle, rightAngle }: { triangle: Triangle | null; righ
         return (
           <text key={v.label} x={x} y={y + 5} textAnchor="middle" fontSize={14} fontWeight={700} fill="#0f172a">
             {v.label}
-            {triangle && <tspan fontSize={11} fontWeight={400} fill="#475569"> {formatNumber(Math.round(v.angle * 10) / 10)}°</tspan>}
+            {triangle && (
+              <tspan fontSize={11} fontWeight={400} fill="#475569">
+                {" "}
+                {v.name} {formatNumber(Math.round(v.angle * 10) / 10)}°
+              </tspan>
+            )}
           </text>
         );
       })}
@@ -111,49 +101,79 @@ function TriangleSvg({ triangle, rightAngle }: { triangle: Triangle | null; righ
   );
 }
 
+interface Editing {
+  key: TriangleKey;
+  text: string;
+  error: string | null;
+}
+
 export function TriangleCalculator() {
   const [rightMode, setRightMode] = useState(true);
-  const [raw, setRaw] = useState<RawValues>(EMPTY);
-  const [solutionIndex, setSolutionIndex] = useState(0);
+  const [triangle, setTriangle] = useState<Triangle>(DEFAULT_TRIANGLE);
+  const [history, setHistory] = useState<TriangleKey[]>(["a", "b"]);
+  const [editing, setEditing] = useState<Editing | null>(null);
+  const [adjusted, setAdjusted] = useState<TriangleKey | null>(null);
 
-  const editableKeys = useMemo<readonly TriangleKey[]>(
-    () => (rightMode ? ["a", "b", "c", "A", "B"] : [...SIDE_KEYS, ...ANGLE_KEYS]),
-    [rightMode],
-  );
-  const required = rightMode ? 2 : 3;
+  const used = new Set(history);
 
-  const { result, filled } = useMemo(() => {
-    const { input, error } = parseValues(raw, editableKeys);
-    const filled = Object.keys(input).length;
-    if (error) return { result: { ok: false as const, error }, filled };
-    return { result: rightMode ? solveRightTriangle(input) : solveTriangle(input), filled };
-  }, [raw, editableKeys, rightMode]);
-
-  const solutions = result.ok ? result.solutions : [];
-  const solution = solutions[Math.min(solutionIndex, solutions.length - 1)] ?? null;
-  const showError = !result.ok && filled >= required;
-
-  const setValue = (k: TriangleKey, v: string) => {
-    setRaw((prev) => ({ ...prev, [k]: v }));
-    setSolutionIndex(0);
+  const edit = (key: TriangleKey, text: string) => {
+    const value = Number(text.trim().replace(",", "."));
+    if (!text.trim() || !Number.isFinite(value) || value <= 0) {
+      setEditing({ key, text, error: `Introduce en ${KEY_LABELS[key]} un número mayor que 0.` });
+      return;
+    }
+    const result = applyEdit(triangle, history, key, value, rightMode);
+    if (!result.ok) {
+      setEditing({ key, text, error: result.error });
+      return;
+    }
+    setEditing({ key, text, error: null });
+    setTriangle(result.triangle);
+    setHistory(result.history);
+    setAdjusted(result.adjusted);
   };
 
-  const field = (k: TriangleKey, unit: string) => {
+  const changeMode = (right: boolean) => {
+    const next = switchMode(triangle, history, right);
+    setRightMode(right);
+    setTriangle(next.triangle);
+    setHistory(next.history);
+    setEditing(null);
+    setAdjusted(null);
+  };
+
+  const reset = () => {
+    const next = switchMode(DEFAULT_TRIANGLE, ["a", "b", "c"], rightMode);
+    setTriangle(next.triangle);
+    setHistory(rightMode ? ["a", "b"] : ["a", "b", "c"]);
+    setEditing(null);
+    setAdjusted(null);
+  };
+
+  const field = (k: TriangleKey) => {
     const locked = rightMode && k === "C";
-    const computed = solution && !raw[k].trim() ? formatNumber(solution[k]) : "";
+    const isEditing = editing?.key === k;
+    const hasError = isEditing && editing.error !== null;
+    const isUsed = used.has(k) && !locked;
+    const value = isEditing ? editing.text : formatNumber(Math.round(triangle[k] * 10_000) / 10_000);
     return (
       <label key={k} className="text-sm text-slate-600">
-        <span className={SIDE_KEYS.includes(k as never) ? "italic" : ""}>{k}</span>
-        <span className="text-slate-400"> ({unit})</span>
+        <span className={SIDE_KEYS.includes(k as never) ? "italic" : ""}>{KEY_LABELS[k]}</span>
+        <span className="text-slate-400"> ({SIDE_KEYS.includes(k as never) ? "lado" : "°"})</span>
         <input
           type="text"
           inputMode="decimal"
-          value={locked ? "90" : raw[k]}
+          value={value}
           disabled={locked}
-          placeholder={computed}
-          onChange={(e) => setValue(k, e.target.value)}
-          className={`mt-1 block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-slate-900 placeholder:font-medium placeholder:text-emerald-700 disabled:bg-slate-100 disabled:text-slate-500 ${
-            computed ? "bg-emerald-50" : ""
+          aria-invalid={hasError}
+          onChange={(e) => edit(k, e.target.value)}
+          onBlur={() => setEditing(null)}
+          className={`mt-1 block w-full rounded-lg border px-3 py-1.5 tabular-nums text-slate-900 outline-none focus:ring-2 focus:ring-indigo-200 disabled:bg-slate-100 disabled:text-slate-500 ${
+            hasError
+              ? "border-rose-400 bg-rose-50"
+              : isUsed
+                ? "border-emerald-400 bg-emerald-50 font-semibold text-emerald-800"
+                : "border-slate-300 bg-white"
           }`}
         />
       </label>
@@ -164,88 +184,64 @@ export function TriangleCalculator() {
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-slate-700">
+          <div className="flex items-center gap-3 text-sm font-medium">
+            <span className={rightMode ? "text-indigo-700" : "text-slate-400"}>Rectángulo</span>
             <button
               type="button"
               role="switch"
               aria-checked={!rightMode}
-              onClick={() => {
-                setRightMode((m) => !m);
-                setSolutionIndex(0);
-              }}
+              aria-label="No rectángulo"
+              onClick={() => changeMode(!rightMode)}
               className={`relative h-6 w-11 rounded-full transition-colors ${rightMode ? "bg-slate-300" : "bg-indigo-600"}`}
             >
               <span
                 className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${rightMode ? "" : "translate-x-5"}`}
               />
             </button>
-            {rightMode ? "Triángulo rectángulo (C = 90°)" : "Triángulo cualquiera"}
-          </label>
+            <span className={rightMode ? "text-slate-400" : "text-indigo-700"}>No rectángulo</span>
+          </div>
           <button
             type="button"
-            onClick={() => {
-              setRaw(EMPTY);
-              setSolutionIndex(0);
-            }}
+            onClick={reset}
             className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
           >
-            Limpiar
+            Reiniciar
           </button>
         </div>
 
         <p className="text-sm text-slate-500">
-          {rightMode
-            ? "Introduce 2 valores (al menos un lado). c es la hipotenusa."
-            : "Introduce 3 valores (al menos un lado). Se resuelven los casos LLL, LAL, ALA, AAL y LLA."}{" "}
-          Los lados a, b y c son opuestos a los ángulos A, B y C.
+          Edita cualquier valor: se calculan los demás a partir de los {rightMode ? "2" : "3"} últimos introducidos
+          (<span className="font-medium text-emerald-700">en verde</span>). Si el último no es compatible, se ajusta el
+          penúltimo. Los lados a, b y c son opuestos a los ángulos α, β y γ{rightMode ? "; γ = 90° y c es la hipotenusa" : ""}.
         </p>
 
         <div className="grid grid-cols-3 gap-3">
-          {SIDE_KEYS.map((k) => field(k, "lado"))}
-          {ANGLE_KEYS.map((k) => field(k, "°"))}
+          {SIDE_KEYS.map((k) => field(k))}
+          {ANGLE_KEYS.map((k) => field(k))}
         </div>
 
-        {showError && (
+        {editing?.error && (
           <p role="alert" className="rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-800">
-            {result.ok ? "" : result.error}
+            {editing.error}
           </p>
         )}
-        {!showError && !solution && (
-          <p className="text-sm text-slate-400">
-            {filled}/{required} valores introducidos.
+        {!editing?.error && adjusted && (
+          <p className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
+            Se ha ajustado {KEY_LABELS[adjusted]} a {formatNumber(Math.round(triangle[adjusted] * 10_000) / 10_000)} para
+            que el triángulo sea posible.
           </p>
         )}
 
-        {solutions.length > 1 && (
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-amber-700">Caso ambiguo: hay 2 triángulos posibles.</span>
-            {solutions.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setSolutionIndex(i)}
-                className={`rounded-lg px-3 py-1 font-medium ${
-                  i === Math.min(solutionIndex, solutions.length - 1) ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                Solución {i + 1}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {solution && (
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-xl bg-slate-50 px-4 py-3 text-sm sm:grid-cols-4">
-            <dt className="text-slate-500">Perímetro</dt>
-            <dd className="font-semibold tabular-nums">{formatNumber(solution.a + solution.b + solution.c)}</dd>
-            <dt className="text-slate-500">Área</dt>
-            <dd className="font-semibold tabular-nums">{formatNumber(triangleArea(solution))}</dd>
-          </dl>
-        )}
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-xl bg-slate-50 px-4 py-3 text-sm sm:grid-cols-4">
+          <dt className="text-slate-500">Perímetro</dt>
+          <dd className="font-semibold tabular-nums">{formatNumber(triangle.a + triangle.b + triangle.c)}</dd>
+          <dt className="text-slate-500">Área</dt>
+          <dd className="font-semibold tabular-nums">{formatNumber(triangleArea(triangle))}</dd>
+        </dl>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
-        <TriangleSvg triangle={solution} rightAngle={rightMode} />
+        <TriangleSvg triangle={triangle} rightAngle={rightMode} />
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import { useEffect, useRef, useState } from "react";
 import { APP_VERSION } from "@/lib/version";
 import type { SyncStatus } from "@/hooks/useCalculeteData";
+import { PageNav } from "./PageNav";
 
 interface HeaderProps {
   user: User;
@@ -42,6 +43,7 @@ export function Header({ user, syncStatus, onLogout }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          <PageNav current="/" />
           {syncStatus !== "idle" && (
             <span
               className={`hidden text-xs sm:inline ${syncStatus === "error" ? "text-rose-600" : "text-slate-500"}`}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   annualOptimalTilt,
   dailyOptimalTilt,
+  dailyTiltedIrradiation,
   dayOfYear,
   seasonOfDay,
   seasonalOptimalTilts,
@@ -39,25 +40,41 @@ describe("annualOptimalTilt", () => {
 });
 
 describe("seasonalOptimalTilts", () => {
-  it("orders winter > autumn ≈ spring > summer", () => {
-    const t = seasonalOptimalTilts(40);
+  it("orders winter > autumn, spring > summer with plausible values", () => {
+    const t = seasonalOptimalTilts(41.65);
     expect(t.invierno).toBeGreaterThan(t.otono);
+    expect(t.invierno).toBeGreaterThan(t.primavera);
     expect(t.otono).toBeGreaterThan(t.verano);
     expect(t.primavera).toBeGreaterThan(t.verano);
     expect(t.invierno).toBeGreaterThan(50);
-    expect(t.invierno).toBeLessThan(60);
-    expect(t.verano).toBeGreaterThan(20);
+    expect(t.invierno).toBeLessThan(70);
+    expect(t.verano).toBeGreaterThan(5);
     expect(t.verano).toBeLessThan(30);
+  });
+
+  it("maximizes the irradiation over the period", () => {
+    const t = seasonalOptimalTilts(41.65);
+    const total = (tilt: number) => {
+      let sum = 0;
+      for (let n = 1; n <= 365; n++) if (seasonOfDay(n) === "verano") sum += dailyTiltedIrradiation(41.65, tilt, n);
+      return sum;
+    };
+    expect(total(t.verano)).toBeGreaterThanOrEqual(total(t.verano + 5));
+    expect(total(t.verano)).toBeGreaterThanOrEqual(total(Math.max(0, t.verano - 5)));
   });
 });
 
 describe("seasonOfDay", () => {
-  it("maps astronomical seasons", () => {
+  it("uses the change dates 3 Mar, 17 Apr, 23 Aug and 6 Oct", () => {
+    expect(seasonOfDay(dayOfYear(new Date(2026, 2, 2)))).toBe("invierno");
+    expect(seasonOfDay(dayOfYear(new Date(2026, 2, 3)))).toBe("primavera");
+    expect(seasonOfDay(dayOfYear(new Date(2026, 3, 16)))).toBe("primavera");
+    expect(seasonOfDay(dayOfYear(new Date(2026, 3, 17)))).toBe("verano");
+    expect(seasonOfDay(dayOfYear(new Date(2026, 7, 22)))).toBe("verano");
+    expect(seasonOfDay(dayOfYear(new Date(2026, 7, 23)))).toBe("otono");
+    expect(seasonOfDay(dayOfYear(new Date(2026, 9, 5)))).toBe("otono");
+    expect(seasonOfDay(dayOfYear(new Date(2026, 9, 6)))).toBe("invierno");
     expect(seasonOfDay(1)).toBe("invierno");
-    expect(seasonOfDay(100)).toBe("primavera");
-    expect(seasonOfDay(200)).toBe("verano");
-    expect(seasonOfDay(300)).toBe("otono");
-    expect(seasonOfDay(360)).toBe("invierno");
   });
 });
 
