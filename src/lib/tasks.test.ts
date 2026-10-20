@@ -14,18 +14,19 @@ describe("toggleSlot", () => {
 
   it("ignores slots outside the scope", () => {
     expect(toggleSlot(newTask("dia"), 5).slots).toEqual([]);
-    expect(toggleSlot(newTask("mes"), 30).slots).toEqual([30]);
+    expect(toggleSlot(newTask("semana"), 7).slots).toEqual([]);
+    expect(toggleSlot(newTask("semana"), 6).slots).toEqual([6]);
   });
 });
 
 describe("moveTask", () => {
   it("reorders within the same scope", () => {
-    const tasks = [task("a", "dia"), task("b", "mes"), task("c", "dia"), task("d", "dia")];
+    const tasks = [task("a", "dia"), task("b", "semana"), task("c", "dia"), task("d", "dia")];
     expect(moveTask(tasks, "d", "a").map((t) => t.id)).toEqual(["d", "a", "b", "c"]);
   });
 
   it("does not move across scopes", () => {
-    const tasks = [task("a", "dia"), task("b", "mes")];
+    const tasks = [task("a", "dia"), task("b", "semana")];
     expect(moveTask(tasks, "a", "b")).toBe(tasks);
   });
 });
@@ -39,6 +40,15 @@ describe("parseTasks", () => {
 
   it("returns an empty list for invalid data", () => {
     expect(parseTasks(null)).toEqual([]);
-    expect(parseTasks([{ id: "x", scope: "semana", concept: "", slots: [] }])).toEqual([]);
+    expect(parseTasks({})).toEqual([]);
+  });
+
+  it("drops tasks of removed scopes but keeps the rest", () => {
+    expect(
+      parseTasks([
+        { id: "old", scope: "mes", concept: "Comunidad", slots: [0] },
+        { id: "ok", scope: "dia", concept: "Regar", slots: [0] },
+      ]).map((t) => t.id),
+    ).toEqual(["ok"]);
   });
 });

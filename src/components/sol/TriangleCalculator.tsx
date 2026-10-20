@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ANGLE_KEYS,
   applyEdit,
+  DEFAULT_RIGHT_HISTORY,
   DEFAULT_TRIANGLE,
   KEY_LABELS,
   SIDE_KEYS,
@@ -19,7 +20,7 @@ function TriangleSvg({ triangle, rightAngle }: { triangle: Triangle | null; righ
   const W = 360;
   const H = 260;
   const PAD = 48;
-  const t = triangle ?? { a: 4, b: 3, c: 5, A: 53.13, B: 36.87, C: 90 };
+  const t = triangle ?? DEFAULT_TRIANGLE;
   const rad = (t.A * Math.PI) / 180;
   const raw = { A: [0, 0], B: [t.c, 0], C: [t.b * Math.cos(rad), t.b * Math.sin(rad)] } as const;
   const xs = [raw.A[0], raw.B[0], raw.C[0]];
@@ -58,12 +59,12 @@ function TriangleSvg({ triangle, rightAngle }: { triangle: Triangle | null; righ
   if (triangle && rightAngle) {
     const s = 14;
     const u = (q: readonly [number, number]) => {
-      const len = Math.hypot(q[0] - C[0], q[1] - C[1]) || 1;
-      return [(q[0] - C[0]) / len, (q[1] - C[1]) / len];
+      const len = Math.hypot(q[0] - A[0], q[1] - A[1]) || 1;
+      return [(q[0] - A[0]) / len, (q[1] - A[1]) / len];
     };
-    const [ux, uy] = u(A);
-    const [vx, vy] = u(B);
-    rightMark = `M${C[0] + ux * s},${C[1] + uy * s} L${C[0] + (ux + vx) * s},${C[1] + (uy + vy) * s} L${C[0] + vx * s},${C[1] + vy * s}`;
+    const [ux, uy] = u(B);
+    const [vx, vy] = u(C);
+    rightMark = `M${A[0] + ux * s},${A[1] + uy * s} L${A[0] + (ux + vx) * s},${A[1] + (uy + vy) * s} L${A[0] + vx * s},${A[1] + vy * s}`;
   }
 
   return (
@@ -110,7 +111,7 @@ interface Editing {
 export function TriangleCalculator() {
   const [rightMode, setRightMode] = useState(true);
   const [triangle, setTriangle] = useState<Triangle>(DEFAULT_TRIANGLE);
-  const [history, setHistory] = useState<TriangleKey[]>(["a", "b"]);
+  const [history, setHistory] = useState<TriangleKey[]>([...DEFAULT_RIGHT_HISTORY]);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [adjusted, setAdjusted] = useState<TriangleKey | null>(null);
 
@@ -145,13 +146,13 @@ export function TriangleCalculator() {
   const reset = () => {
     const next = switchMode(DEFAULT_TRIANGLE, ["a", "b", "c"], rightMode);
     setTriangle(next.triangle);
-    setHistory(rightMode ? ["a", "b"] : ["a", "b", "c"]);
+    setHistory(rightMode ? [...DEFAULT_RIGHT_HISTORY] : ["a", "b", "c"]);
     setEditing(null);
     setAdjusted(null);
   };
 
   const field = (k: TriangleKey) => {
-    const locked = rightMode && k === "C";
+    const locked = rightMode && k === "A";
     const isEditing = editing?.key === k;
     const hasError = isEditing && editing.error !== null;
     const isUsed = used.has(k) && !locked;
@@ -212,7 +213,7 @@ export function TriangleCalculator() {
         <p className="text-sm text-slate-500">
           Edita cualquier valor: se calculan los demás a partir de los {rightMode ? "2" : "3"} últimos introducidos
           (<span className="font-medium text-emerald-700">en verde</span>). Si el último no es compatible, se ajusta el
-          penúltimo. Los lados a, b y c son opuestos a los ángulos α, β y γ{rightMode ? "; γ = 90° y c es la hipotenusa" : ""}.
+          penúltimo. Los lados a, b y c son opuestos a los ángulos α, β y γ{rightMode ? "; α = 90° y a es la hipotenusa" : ""}.
         </p>
 
         <div className="grid grid-cols-3 gap-3">

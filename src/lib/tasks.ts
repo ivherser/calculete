@@ -1,15 +1,15 @@
 import { z } from "zod";
 import { MONTH_LABELS } from "./types";
 
-export const TASK_SCOPES = ["dia", "mes", "anio"] as const;
+export const TASK_SCOPES = ["dia", "semana", "anio"] as const;
 export type TaskScope = (typeof TASK_SCOPES)[number];
 
-export const TASK_SCOPE_TITLES: Record<TaskScope, string> = { dia: "Día", mes: "Mes", anio: "Año" };
+export const TASK_SCOPE_TITLES: Record<TaskScope, string> = { dia: "Día", semana: "Semana", anio: "Año" };
 
 /** Casillas que se pueden marcar a la derecha de cada concepto. */
 export const TASK_SLOTS: Record<TaskScope, readonly string[]> = {
   dia: ["Mañana", "Tarde", "Noche"],
-  mes: Array.from({ length: 31 }, (_, i) => String(i + 1)),
+  semana: ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"],
   anio: MONTH_LABELS,
 };
 
@@ -28,20 +28,25 @@ const taskSchema = z
     id: z.string().min(1).max(64),
     scope: z.enum(TASK_SCOPES),
     concept: z.string().max(MAX_TASK_CONCEPT_LENGTH),
-    slots: z.array(z.number().int().min(0).max(30)).max(31),
+    slots: z.array(z.number().int()).max(31),
   })
   .transform((t) => ({ ...t, slots: normalizeSlots(t.scope, t.slots) }));
 
-const tasksSchema = z.array(taskSchema).max(MAX_TASKS);
 
 function normalizeSlots(scope: TaskScope, slots: number[]): number[] {
   const max = TASK_SLOTS[scope].length;
   return [...new Set(slots)].filter((s) => s >= 0 && s < max).sort((a, b) => a - b);
 }
 
+/** Lee las tareas guardadas descartando las inválidas (p. ej. de secciones que ya no existen). */
 export function parseTasks(input: unknown): Task[] {
-  const result = tasksSchema.safeParse(input);
-  return result.success ? result.data : [];
+  if (!Array.isArray(input)) return [];
+  return input
+    .slice(0, MAX_TASKS)
+    .flatMap((item) => {
+      const result = taskSchema.safeParse(item);
+      return result.success ? [result.data] : [];
+    });
 }
 
 export function newTask(scope: TaskScope): Task {

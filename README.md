@@ -16,8 +16,8 @@ Calculadora personal de ingresos, gastos y balance anual.
 - **`/sol`** (botón «Sol» en la cabecera, sin login): gráfica del ángulo óptimo de inclinación por día del año
   (Valladolid por defecto) con los periodos 3 MAR, 17 ABR, 23 AGO y 6 OCT y su ángulo óptimo, calculadora de
   triángulos (rectángulo o no) con dibujo en tiempo real, y esquema de la instalación solar.
-- **`/task`** (botón «Task» en la cabecera, sin login): tres tablas (Día, Mes, Año) de conceptos editables y
-  reordenables; a la derecha se marcan mañana/tarde/noche, los días del mes o los meses. Se guardan en el navegador.
+- **`/task`** (botón «Task» en la cabecera, sin login): tres tablas (Día, Semana, Año) de conceptos editables y
+  reordenables; a la derecha se marcan mañana/tarde/noche, los días de la semana o los meses. Se guardan en el navegador.
 
 ## Funcionalidades
 
