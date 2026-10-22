@@ -47,38 +47,21 @@ export function seasonOfDay(n: number): Season {
   return "invierno";
 }
 
-/**
- * Irradiación extraterrestre diaria (relativa) sobre un plano orientado al sur con inclinación `tilt`
- * (fórmula de Klein para superficies inclinadas).
- */
-export function dailyTiltedIrradiation(latitude: number, tilt: number, n: number): number {
-  const phi = latitude * DEG;
-  const delta = solarDeclination(n) * DEG;
-  const eff = (latitude - tilt) * DEG;
-  const clampCos = (x: number) => Math.acos(Math.min(1, Math.max(-1, x)));
-  const sunset = clampCos(-Math.tan(phi) * Math.tan(delta));
-  const sunsetTilted = Math.min(sunset, clampCos(-Math.tan(eff) * Math.tan(delta)));
-  const value = Math.cos(eff) * Math.cos(delta) * Math.sin(sunsetTilted) + sunsetTilted * Math.sin(eff) * Math.sin(delta);
-  return Math.max(0, value);
-}
-
-/** Inclinación fija que maximiza la irradiación recibida en cada periodo (búsqueda en pasos de 0,1°). */
+/** Inclinación fija para cada periodo: media del óptimo diario a lo largo del periodo. */
 export function seasonalOptimalTilts(latitude: number): Record<Season, number> {
-  const days: Record<Season, number[]> = { invierno: [], primavera: [], verano: [], otono: [] };
-  for (let n = 1; n <= DAYS_IN_YEAR; n++) days[seasonOfDay(n)].push(n);
-  const result = { invierno: 0, primavera: 0, verano: 0, otono: 0 };
-  for (const s of SEASONS) {
-    let best = -Infinity;
-    for (let t = 0; t <= 900; t++) {
-      const tilt = t / 10;
-      const total = days[s].reduce((acc, n) => acc + dailyTiltedIrradiation(latitude, tilt, n), 0);
-      if (total > best) {
-        best = total;
-        result[s] = tilt;
-      }
-    }
+  const sum: Record<Season, number> = { invierno: 0, primavera: 0, verano: 0, otono: 0 };
+  const count: Record<Season, number> = { invierno: 0, primavera: 0, verano: 0, otono: 0 };
+  for (let n = 1; n <= DAYS_IN_YEAR; n++) {
+    const s = seasonOfDay(n);
+    sum[s] += dailyOptimalTilt(latitude, n);
+    count[s]++;
   }
-  return result;
+  return {
+    invierno: sum.invierno / count.invierno,
+    primavera: sum.primavera / count.primavera,
+    verano: sum.verano / count.verano,
+    otono: sum.otono / count.otono,
+  };
 }
 
 /** Día del año (1–365) de una fecha; el 29 de febrero se trata como el 28. */

@@ -14,10 +14,10 @@ Calculadora personal de ingresos, gastos y balance anual.
 - **`/admin`**: sin enlace en la navegación. Solo accesible para administradores; lista los usuarios que han iniciado
   sesión y permite ver sus datos. Las consultas se hacen en servidor con `SUPABASE_SERVICE_ROLE_KEY`.
 - **`/sol`** (botón «Sol» en la cabecera, sin login): gráfica del ángulo óptimo de inclinación por día del año
-  (Valladolid por defecto) con los periodos 3 MAR, 17 ABR, 23 AGO y 6 OCT y su ángulo óptimo, calculadora de
+  (Valladolid por defecto) con los periodos 3 MAR, 17 ABR, 23 AGO y 6 OCT y su ángulo medio, calculadora de
   triángulos (rectángulo o no) con dibujo en tiempo real, y esquema de la instalación solar.
-- **`/task`** (botón «Task» en la cabecera, sin login): cuatro tablas (Día, Semana, Mes, Año) de conceptos editables y
-  reordenables; a la derecha se marcan mañana/tarde/noche, los días de la semana, los días del mes o los meses. Se guardan en el navegador.
+- **`/task`** (botón «Task» en la cabecera, sin login): dos tablas (Semana, Año) de conceptos editables y
+  reordenables; a la derecha se marcan los días de la semana (más «x2» y «x4») o los meses. Se guardan en el navegador.
 
 ## Funcionalidades
 

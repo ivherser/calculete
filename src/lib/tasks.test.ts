@@ -5,7 +5,7 @@ const task = (id: string, scope: Task["scope"], slots: number[] = []): Task => (
 
 describe("toggleSlot", () => {
   it("adds and removes slots keeping them sorted", () => {
-    let t = newTask("dia");
+    let t = newTask("semana");
     t = toggleSlot(t, 2);
     t = toggleSlot(t, 0);
     expect(t.slots).toEqual([0, 2]);
@@ -13,22 +13,20 @@ describe("toggleSlot", () => {
   });
 
   it("ignores slots outside the scope", () => {
-    expect(toggleSlot(newTask("dia"), 5).slots).toEqual([]);
-    expect(toggleSlot(newTask("semana"), 7).slots).toEqual([]);
-    expect(toggleSlot(newTask("semana"), 6).slots).toEqual([6]);
-    expect(toggleSlot(newTask("mes"), 30).slots).toEqual([30]);
-    expect(toggleSlot(newTask("mes"), 31).slots).toEqual([]);
+    expect(toggleSlot(newTask("semana"), 8).slots).toEqual([8]);
+    expect(toggleSlot(newTask("semana"), 9).slots).toEqual([]);
+    expect(toggleSlot(newTask("anio"), 12).slots).toEqual([]);
   });
 });
 
 describe("moveTask", () => {
   it("reorders within the same scope", () => {
-    const tasks = [task("a", "dia"), task("b", "semana"), task("c", "dia"), task("d", "dia")];
+    const tasks = [task("a", "semana"), task("b", "anio"), task("c", "semana"), task("d", "semana")];
     expect(moveTask(tasks, "d", "a").map((t) => t.id)).toEqual(["d", "a", "b", "c"]);
   });
 
   it("does not move across scopes", () => {
-    const tasks = [task("a", "dia"), task("b", "semana")];
+    const tasks = [task("a", "semana"), task("b", "anio")];
     expect(moveTask(tasks, "a", "b")).toBe(tasks);
   });
 });
@@ -48,8 +46,8 @@ describe("parseTasks", () => {
   it("drops tasks of removed scopes but keeps the rest", () => {
     expect(
       parseTasks([
-        { id: "old", scope: "quincena", concept: "Comunidad", slots: [0] },
-        { id: "ok", scope: "dia", concept: "Regar", slots: [0] },
+        { id: "old", scope: "mes", concept: "Comunidad", slots: [0] },
+        { id: "ok", scope: "semana", concept: "Basura", slots: [0] },
       ]).map((t) => t.id),
     ).toEqual(["ok"]);
   });

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   annualOptimalTilt,
   dailyOptimalTilt,
-  dailyTiltedIrradiation,
   dayOfYear,
   seasonOfDay,
   seasonalOptimalTilts,
@@ -47,20 +46,21 @@ describe("seasonalOptimalTilts", () => {
     expect(t.otono).toBeGreaterThan(t.verano);
     expect(t.primavera).toBeGreaterThan(t.verano);
     expect(t.invierno).toBeGreaterThan(50);
-    expect(t.invierno).toBeLessThan(70);
-    expect(t.verano).toBeGreaterThan(5);
+    expect(t.invierno).toBeLessThan(65);
+    expect(t.verano).toBeGreaterThan(18);
     expect(t.verano).toBeLessThan(30);
   });
 
-  it("maximizes the irradiation over the period", () => {
+  it("is the mean of the daily optimum, within its min and max, for each period", () => {
     const t = seasonalOptimalTilts(41.65);
-    const total = (tilt: number) => {
-      let sum = 0;
-      for (let n = 1; n <= 365; n++) if (seasonOfDay(n) === "verano") sum += dailyTiltedIrradiation(41.65, tilt, n);
-      return sum;
-    };
-    expect(total(t.verano)).toBeGreaterThanOrEqual(total(t.verano + 5));
-    expect(total(t.verano)).toBeGreaterThanOrEqual(total(Math.max(0, t.verano - 5)));
+    for (const season of ["invierno", "primavera", "verano", "otono"] as const) {
+      const daily: number[] = [];
+      for (let n = 1; n <= 365; n++) if (seasonOfDay(n) === season) daily.push(dailyOptimalTilt(41.65, n));
+      const mean = daily.reduce((a, b) => a + b, 0) / daily.length;
+      expect(t[season]).toBeCloseTo(mean, 9);
+      expect(t[season]).toBeGreaterThan(Math.min(...daily));
+      expect(t[season]).toBeLessThan(Math.max(...daily));
+    }
   });
 });
 

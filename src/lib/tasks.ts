@@ -1,16 +1,14 @@
 import { z } from "zod";
 import { MONTH_LABELS } from "./types";
 
-export const TASK_SCOPES = ["dia", "semana", "mes", "anio"] as const;
+export const TASK_SCOPES = ["semana", "anio"] as const;
 export type TaskScope = (typeof TASK_SCOPES)[number];
 
-export const TASK_SCOPE_TITLES: Record<TaskScope, string> = { dia: "Día", semana: "Semana", mes: "Mes", anio: "Año" };
+export const TASK_SCOPE_TITLES: Record<TaskScope, string> = { semana: "Semana", anio: "Año" };
 
 /** Casillas que se pueden marcar a la derecha de cada concepto. */
 export const TASK_SLOTS: Record<TaskScope, readonly string[]> = {
-  dia: ["Mañana", "Tarde", "Noche"],
-  semana: ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"],
-  mes: Array.from({ length: 31 }, (_, i) => String(i + 1)),
+  semana: ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM", "x2", "x4"],
   anio: MONTH_LABELS,
 };
 

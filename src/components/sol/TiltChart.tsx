@@ -139,7 +139,7 @@ export function TiltChart() {
       <p className="text-xs text-slate-500">
         Paneles orientados al sur (hemisferio norte). Óptimo diario: panel perpendicular al sol al mediodía solar
         (latitud − declinación). Periodos con cambio de inclinación el 3 MAR, 17 ABR, 23 AGO y 6 OCT; en cada uno el
-        ángulo es el que maximiza la radiación solar (extraterrestre) recibida en todo el periodo. Fijo anual:
+        ángulo es la media del óptimo diario del periodo. Fijo anual:
         aproximación del IDAE (3,7 + 0,69 · latitud).
       </p>
     </div>
