@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moveTask, newTask, parseTasks, toggleSlot, type Task } from "./tasks";
+import { moveTask, newTask, parseTasks, rowsToTasks, taskToRow, toggleSlot, type Task, type TaskRow } from "./tasks";
 
 const task = (id: string, scope: Task["scope"], slots: number[] = []): Task => ({ id, scope, concept: id, slots });
 
@@ -50,5 +50,23 @@ describe("parseTasks", () => {
         { id: "ok", scope: "semana", concept: "Basura", slots: [0] },
       ]).map((t) => t.id),
     ).toEqual(["ok"]);
+  });
+});
+
+describe("taskToRow / rowsToTasks", () => {
+  it("round-trips tasks keeping scope, concept, slots and order", () => {
+    const tasks = [task("a", "semana", [0, 7]), task("b", "anio", [3])];
+    const rows = tasks.map((t, i) => taskToRow(t, "user-1", i));
+    expect(rows[0]).toMatchObject({ id: "a", user_id: "user-1", scope: "semana", concept: "a", slots: [0, 7], position: 0 });
+    expect(rowsToTasks(rows)).toEqual(tasks);
+  });
+
+  it("sorts rows by position and drops invalid ones", () => {
+    const rows = [
+      { id: "b", user_id: "u", scope: "anio", concept: "ITV", slots: [2], position: 1 },
+      { id: "a", user_id: "u", scope: "semana", concept: "Basura", slots: [0], position: 0 },
+      { id: "x", user_id: "u", scope: "mes", concept: "old", slots: [0], position: 2 },
+    ] as unknown as TaskRow[];
+    expect(rowsToTasks(rows).map((t) => t.id)).toEqual(["a", "b"]);
   });
 });
