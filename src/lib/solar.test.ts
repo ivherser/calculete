@@ -3,9 +3,13 @@ import {
   annualOptimalTilt,
   dailyOptimalTilt,
   dayOfYear,
+  dstRange,
   seasonOfDay,
   seasonalOptimalTilts,
   solarDeclination,
+  solarNoonClockHour,
+  spanishUtcOffset,
+  sunClockHour,
 } from "./solar";
 
 describe("solarDeclination", () => {
@@ -87,5 +91,37 @@ describe("dayOfYear", () => {
   it("keeps the same day number in leap years", () => {
     expect(dayOfYear(new Date(2028, 2, 1))).toBe(60);
     expect(dayOfYear(new Date(2028, 11, 31))).toBe(365);
+  });
+});
+
+describe("sun times", () => {
+  const VALLADOLID = { lat: 41.65, lon: -4.72 };
+
+  it("dstRange returns the last Sundays of March and October", () => {
+    expect(dstRange(2026)).toEqual({ start: dayOfYear(new Date(2026, 2, 29)), end: dayOfYear(new Date(2026, 9, 25)) });
+  });
+
+  it("spanishUtcOffset is 2 in summer and 1 in winter", () => {
+    const { start, end } = dstRange(2026);
+    expect(spanishUtcOffset(start, 2026)).toBe(2);
+    expect(spanishUtcOffset(end - 1, 2026)).toBe(2);
+    expect(spanishUtcOffset(end, 2026)).toBe(1);
+    expect(spanishUtcOffset(start - 1, 2026)).toBe(1);
+  });
+
+  it("matches real sunrise/sunset in Valladolid within a few minutes", () => {
+    const jun21 = dayOfYear(new Date(2026, 5, 21));
+    const dec21 = dayOfYear(new Date(2026, 11, 21));
+    expect(sunClockHour(VALLADOLID.lat, VALLADOLID.lon, jun21, 2026, -1)).toBeCloseTo(6.75, 1);
+    expect(sunClockHour(VALLADOLID.lat, VALLADOLID.lon, jun21, 2026, 1)).toBeCloseTo(21.9, 1);
+    expect(sunClockHour(VALLADOLID.lat, VALLADOLID.lon, dec21, 2026, -1)).toBeCloseTo(8.7, 1);
+    expect(sunClockHour(VALLADOLID.lat, VALLADOLID.lon, dec21, 2026, 1)).toBeCloseTo(17.9, 1);
+  });
+
+  it("solar noon is about 13h in winter and 14h in summer for Valladolid", () => {
+    const jun21 = dayOfYear(new Date(2026, 5, 21));
+    const dec21 = dayOfYear(new Date(2026, 11, 21));
+    expect(solarNoonClockHour(VALLADOLID.lon, jun21, 2026)).toBeCloseTo(14.3, 1);
+    expect(solarNoonClockHour(VALLADOLID.lon, dec21, 2026)).toBeCloseTo(13.3, 1);
   });
 });
