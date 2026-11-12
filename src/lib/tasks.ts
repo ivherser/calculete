@@ -48,6 +48,32 @@ export function parseTasks(input: unknown): Task[] {
     });
 }
 
+/** Fila tal y como se guarda en la tabla `public.tasks`. */
+export interface TaskRow {
+  id: string;
+  user_id: string;
+  scope: TaskScope;
+  concept: string;
+  slots: number[];
+  position: number;
+}
+
+export function rowsToTasks(rows: TaskRow[]): Task[] {
+  const sorted = [...rows].sort((a, b) => a.position - b.position);
+  return parseTasks(sorted);
+}
+
+export function taskToRow(task: Task, userId: string, position: number): TaskRow {
+  return {
+    id: task.id,
+    user_id: userId,
+    scope: task.scope,
+    concept: task.concept.slice(0, MAX_TASK_CONCEPT_LENGTH),
+    slots: task.slots,
+    position,
+  };
+}
+
 export function newTask(scope: TaskScope): Task {
   return { id: crypto.randomUUID(), scope, concept: "", slots: [] };
 }

@@ -9,6 +9,7 @@ import { PageNav } from "./PageNav";
 interface HeaderProps {
   user: User;
   syncStatus: SyncStatus;
+  current?: "/" | "/sol" | "/task";
   onLogout: () => void;
 }
 
@@ -19,7 +20,7 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
   error: "Error al guardar",
 };
 
-export function Header({ user, syncStatus, onLogout }: HeaderProps) {
+export function Header({ user, syncStatus, current = "/", onLogout }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +44,7 @@ export function Header({ user, syncStatus, onLogout }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <PageNav current="/" />
+          <PageNav current={current} />
           {syncStatus !== "idle" && (
             <span
               className={`hidden text-xs sm:inline ${syncStatus === "error" ? "text-rose-600" : "text-slate-500"}`}

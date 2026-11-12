@@ -71,6 +71,7 @@ export function markMigrationAsked(userId: string): void {
 }
 
 const TASKS_KEY = "calculete:tasks:v1";
+const TASK_MIGRATION_KEY_PREFIX = "calculete:task-migration-asked:";
 
 export function loadLocalTasks(): Task[] {
   return parseTasks(safeParse(safeGet(TASKS_KEY)));
@@ -78,4 +79,16 @@ export function loadLocalTasks(): Task[] {
 
 export function saveLocalTasks(tasks: Task[]): void {
   safeSet(TASKS_KEY, JSON.stringify(tasks));
+}
+
+export function clearLocalTasks(): void {
+  safeSet(TASKS_KEY, null);
+}
+
+export function wasTaskMigrationAsked(userId: string): boolean {
+  return safeGet(TASK_MIGRATION_KEY_PREFIX + userId) === "1";
+}
+
+export function markTaskMigrationAsked(userId: string): void {
+  safeSet(TASK_MIGRATION_KEY_PREFIX + userId, "1");
 }
