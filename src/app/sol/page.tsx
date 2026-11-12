@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { SolarDiagram } from "@/components/sol/SolarDiagram";
+import { SunTimesChart } from "@/components/sol/SunTimesChart";
 import { TiltChart } from "@/components/sol/TiltChart";
 import { TriangleCalculator } from "@/components/sol/TriangleCalculator";
 
@@ -23,6 +24,9 @@ export default function SolPage() {
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
         <Section title="Ángulo óptimo de inclinación">
           <TiltChart />
+        </Section>
+        <Section title="Salida y puesta del sol">
+          <SunTimesChart />
         </Section>
         <Section title="Calculadora de triángulos">
           <TriangleCalculator />
